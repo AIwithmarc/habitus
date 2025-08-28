@@ -22,7 +22,11 @@ const CheckIn = (() => {
         GRACE_DAYS: 1, // Allow 1 day grace period
         REMINDER_INTERVALS: [7, 8, 10], // Days when to show reminders
         STORAGE_KEY: 'habitus_checkin_state',
-        BLOCKED_ACTIONS: ['newWeek']
+        BLOCKED_ACTIONS: ['newWeek', 'addTask', 'addGoal', 'addRole', 'editTask', 'editGoal', 'editRole'],
+        CHECKIN_WINDOW: {
+            START_DAY: 5, // Friday (0=Sunday, 5=Friday)
+            END_DAY: 0    // Sunday (0=Sunday)
+        }
     };
 
     // Storage utilities
@@ -115,11 +119,13 @@ const CheckIn = (() => {
     function checkIfRequired() {
         const now = new Date();
         const currentWeekStart = getWeekStart(now);
+        const currentDay = now.getDay(); // 0=Sunday, 1=Monday, ..., 5=Friday, 6=Saturday
         
         // If this is the first time, set current week and no check-in required
         if (!checkInState.currentWeekStart) {
             checkInState.currentWeekStart = currentWeekStart;
             checkInState.isPending = false;
+            checkInState.isBlocking = false;
             saveState();
             return false;
         }
@@ -128,25 +134,49 @@ const CheckIn = (() => {
         const hasNewWeekStarted = currentWeekStart.getTime() > checkInState.currentWeekStart.getTime();
         
         if (hasNewWeekStarted) {
-            // New week detected
-            const daysSinceLastCheckIn = checkInState.lastCheckIn ? 
-                daysSince(checkInState.lastCheckIn) : 
-                Infinity;
+            // New week detected - check if we're in the check-in window
+            const isInCheckInWindow = isDayInCheckInWindow(currentDay);
+            
+            if (isInCheckInWindow) {
+                // We're in the check-in window (Friday-Sunday)
+                const daysSinceLastCheckIn = checkInState.lastCheckIn ? 
+                    daysSince(checkInState.lastCheckIn) : 
+                    Infinity;
 
-            // Require check-in if it's been more than a week
-            if (daysSinceLastCheckIn >= CONFIG.WEEK_DAYS) {
-                checkInState.isPending = true;
-                checkInState.currentWeekStart = currentWeekStart;
+                // Require check-in if it's been more than a week
+                if (daysSinceLastCheckIn >= CONFIG.WEEK_DAYS) {
+                    checkInState.isPending = true;
+                    checkInState.currentWeekStart = currentWeekStart;
+                    checkInState.isBlocking = false; // Not blocking during check-in window
+                    saveState();
+                    return true;
+                }
+            } else if (currentDay === 1) { // Monday
+                // It's Monday and check-in wasn't completed
+                const daysSinceLastCheckIn = checkInState.lastCheckIn ? 
+                    daysSince(checkInState.lastCheckIn) : 
+                    Infinity;
                 
-                // Determine if should be blocking
-                checkInState.isBlocking = daysSinceLastCheckIn >= (CONFIG.WEEK_DAYS + CONFIG.GRACE_DAYS);
-                
-                saveState();
-                return true;
+                if (daysSinceLastCheckIn >= CONFIG.WEEK_DAYS) {
+                    checkInState.isPending = true;
+                    checkInState.currentWeekStart = currentWeekStart;
+                    checkInState.isBlocking = true; // Blocking on Monday until check-in completed
+                    saveState();
+                    return true;
+                }
             }
         }
 
         return checkInState.isPending;
+    }
+
+    // Helper function to check if current day is in check-in window
+    function isDayInCheckInWindow(day) {
+        // Check-in window: Friday (5) to Sunday (0)
+        if (CONFIG.CHECKIN_WINDOW.START_DAY === 5 && CONFIG.CHECKIN_WINDOW.END_DAY === 0) {
+            return day >= 5 || day === 0; // Friday, Saturday, or Sunday
+        }
+        return false;
     }
 
     function shouldShowReminder() {
@@ -161,6 +191,40 @@ const CheckIn = (() => {
 
     function isActionBlocked(action) {
         return checkInState.isBlocking && CONFIG.BLOCKED_ACTIONS.includes(action);
+    }
+
+    // Check if any actions are currently blocked
+    function areActionsBlocked() {
+        return checkInState.isBlocking;
+    }
+
+    // Get current check-in status for UI display
+    function getCheckInStatus() {
+        const now = new Date();
+        const currentDay = now.getDay();
+        
+        if (checkInState.isPending && checkInState.isBlocking) {
+            return {
+                status: 'blocking',
+                message: '⚠️ Check-in Requerido - Acciones Bloqueadas',
+                description: 'Debes completar el check-in semanal antes de continuar',
+                canProceed: false
+            };
+        } else if (checkInState.isPending && !checkInState.isBlocking) {
+            return {
+                status: 'pending',
+                message: '🎯 Check-in Disponible',
+                description: 'Puedes realizar el check-in semanal cuando quieras',
+                canProceed: true
+            };
+        } else {
+            return {
+                status: 'completed',
+                message: '✅ Check-in Completado',
+                description: 'Check-in de esta semana ya realizado',
+                canProceed: true
+            };
+        }
     }
 
     // Modal management
@@ -638,27 +702,68 @@ const CheckIn = (() => {
             return;
         }
 
-        console.log('[CheckIn] Updating single button, isPending:', checkInState.isPending, 'isBlocking:', checkInState.isBlocking);
+        const status = getCheckInStatus();
+        console.log('[CheckIn] Updating button with status:', status);
 
-        if (checkInState.isPending) {
-            // Check-in is pending: Show enabled button to perform check-in
-            const urgencyClass = checkInState.isBlocking ? 'bg-red-500 hover:bg-red-600 active:bg-red-700' : 'bg-indigo-500 hover:bg-indigo-600 active:bg-indigo-700';
-            const urgencyText = checkInState.isBlocking ? '⚠️ Check-in Requerido' : '🎯 Realizar Check-in';
-            
-            checkInBtn.textContent = urgencyText;
-            checkInBtn.className = `${urgencyClass} text-white text-sm font-medium px-4 py-3 rounded w-auto touch-manipulation`;
+        if (status.status === 'blocking') {
+            // Check-in is blocking: Show urgent button
+            checkInBtn.textContent = status.message;
+            checkInBtn.className = 'bg-red-500 hover:bg-red-600 active:bg-red-700 text-white text-sm font-medium px-4 py-3 rounded w-full touch-manipulation';
             checkInBtn.onclick = () => showModal();
             checkInBtn.disabled = false;
             
-            console.log('[CheckIn] Button enabled for check-in:', urgencyText);
+            // Add warning description below button
+            addWarningDescription(status.description);
+            
+        } else if (status.status === 'pending') {
+            // Check-in is pending but not blocking: Show normal button
+            checkInBtn.textContent = status.message;
+            checkInBtn.className = 'bg-indigo-500 hover:bg-indigo-600 active:bg-indigo-700 text-white text-sm font-medium px-4 py-3 rounded w-full touch-manipulation';
+            checkInBtn.onclick = () => showModal();
+            checkInBtn.disabled = false;
+            
+            // Remove any warning description
+            removeWarningDescription();
+            
         } else {
-            // No check-in pending: Show disabled status button
-            checkInBtn.textContent = '✅ Check-in Completado';
-            checkInBtn.className = 'bg-gray-400 text-white text-sm font-medium px-4 py-3 rounded w-auto disabled-status-btn';
+            // Check-in completed: Show disabled status button
+            checkInBtn.textContent = status.message;
+            checkInBtn.className = 'bg-gray-400 text-white text-sm font-medium px-4 py-3 rounded w-full disabled-status-btn';
             checkInBtn.onclick = null;
             checkInBtn.disabled = true;
             
-            console.log('[CheckIn] Button disabled - check-in completed');
+            // Remove any warning description
+            removeWarningDescription();
+        }
+    }
+
+    // Helper function to add warning description
+    function addWarningDescription(description) {
+        const checkInSection = document.querySelector('.bg-indigo-50.border-indigo-200');
+        if (checkInSection) {
+            // Remove existing warning if any
+            removeWarningDescription();
+            
+            const warningDiv = document.createElement('div');
+            warningDiv.id = 'checkInWarning';
+            warningDiv.className = 'mt-3 p-3 bg-red-50 border border-red-200 rounded-lg';
+            warningDiv.innerHTML = `
+                <div class="flex items-center text-red-800">
+                    <span class="mr-2">🚫</span>
+                    <span class="text-sm font-medium">${description}</span>
+                </div>
+            `;
+            
+            const buttonContainer = checkInSection.querySelector('#checkInBtn').parentElement;
+            buttonContainer.appendChild(warningDiv);
+        }
+    }
+
+    // Helper function to remove warning description
+    function removeWarningDescription() {
+        const existingWarning = document.getElementById('checkInWarning');
+        if (existingWarning) {
+            existingWarning.remove();
         }
     }
 
@@ -760,12 +865,15 @@ const CheckIn = (() => {
                 
                 console.log('[CheckIn] UI initialization completed');
                 
-                // Show modal if required and should show reminder
-                if (isRequired && (checkInState.isBlocking || shouldShowReminder())) {
-                    // Additional delay to ensure UI is ready
+                // Don't show modal automatically - let user navigate to check-in tab when needed
+                // Only show blocking modal if absolutely necessary (Monday blocking)
+                const now = new Date();
+                const currentDay = now.getDay();
+                if (isRequired && checkInState.isBlocking && currentDay === 1) {
+                    // Show blocking modal only on Monday if check-in is required
                     setTimeout(() => {
                         showModal();
-                    }, 500);
+                    }, 1000);
                 }
             }, 100);
             
@@ -799,6 +907,8 @@ const CheckIn = (() => {
         hideModal,
         checkIfRequired,
         isActionBlocked,
+        areActionsBlocked,
+        getCheckInStatus,
         completeCheckIn,
         
         // Getters for external use

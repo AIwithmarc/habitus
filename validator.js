@@ -402,9 +402,9 @@ const HabitusValidator = (() => {
     }
 
     function generateSecureId() {
-        const timestamp = Date.now();
+        const timestamp = Date.now().toString(36);
         const random = Math.random().toString(36).substr(2, 9);
-        return `${timestamp}_${random}`;
+        return `task_${timestamp}_${random}`;
     }
 
     // Public validation methods
@@ -414,9 +414,9 @@ const HabitusValidator = (() => {
             // Ensure task has proper structure
             const taskData = {
                 id: task.id || generateSecureId(),
-                description: sanitizeString(task.description, 500),
-                role: sanitizeString(task.role, 100),
-                goal: sanitizeString(task.goal, 100),
+                description: task.description ? sanitizeString(task.description, 500) : '',
+                role: task.role ? sanitizeString(task.role, 100) : '',
+                goal: task.goal ? sanitizeString(task.goal, 100) : '',
                 quadrant: String(task.quadrant),
                 completed: Boolean(task.completed),
                 createdAt: task.createdAt || new Date().toISOString()

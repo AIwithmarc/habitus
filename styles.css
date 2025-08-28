@@ -602,120 +602,7 @@ body.dragging {
         min-width: 16px;
         margin-right: 8px;
     }
-}
-
-/* Mobile bottom navigation enhancements */
-.mobile-bottom-nav {
-    background: rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    border-top: 1px solid rgba(229, 231, 235, 0.8);
-}
-
-.mobile-bottom-nav .nav-item {
-    position: relative;
-    overflow: hidden;
-}
-
-.mobile-bottom-nav .nav-item::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: linear-gradient(135deg, rgba(79, 70, 229, 0.1), rgba(147, 51, 234, 0.1));
-    opacity: 0;
-    transition: opacity 0.2s ease;
-}
-
-.mobile-bottom-nav .nav-item.active::before {
-    opacity: 1;
-}
-
-.mobile-bottom-nav .nav-item.active .nav-icon {
-    transform: scale(1.1);
-}
-
-.mobile-bottom-nav .nav-icon {
-    transition: transform 0.2s ease;
-}
-
-/* Safe area support for modern devices */
-@supports (padding: max(0px)) {
-    .mobile-bottom-nav {
-        padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
-    }
-    
-    body {
-        padding-bottom: max(80px, env(safe-area-inset-bottom) + 80px);
-    }
-}
-
-/* Enhanced mobile experience */
-@media (max-width: 768px) {
-    /* Improve touch targets */
-    button, input, select, textarea {
-        min-height: 44px;
-    }
-    
-    /* Better spacing for mobile */
-    .space-y-4 > * + * {
-        margin-top: 1rem;
-    }
-    
-    .space-y-6 > * + * {
-        margin-top: 1.5rem;
-    }
-    
-    /* Optimize grid layouts for mobile */
-    .grid-cols-2 {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 0.75rem;
-    }
-    
-    .grid-cols-4 {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 0.75rem;
-    }
-    
-    /* Improve form layouts */
-    .flex.gap-2 {
-        gap: 0.5rem;
-    }
-    
-    /* Better button sizing */
-    .px-4.py-2 {
-        padding: 0.75rem 1rem;
-    }
-    
-    /* Optimize text sizes */
-    .text-sm {
-        font-size: 0.875rem;
-        line-height: 1.25rem;
-    }
-    
-    .text-xs {
-        font-size: 0.75rem;
-        line-height: 1rem;
-    }
-}
-
-/* Smooth animations for tab transitions */
-.tab-content {
-    animation: fadeIn 0.3s ease-in-out;
-}
-
-@keyframes fadeIn {
-    from {
-        opacity: 0;
-        transform: translateY(10px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
+} 
 
 /* Enhanced focus states for accessibility */
 .mobile-bottom-nav .nav-item:focus {
@@ -727,5 +614,163 @@ body.dragging {
 @media (hover: hover) {
     .mobile-bottom-nav .nav-item:hover {
         background-color: rgba(79, 70, 229, 0.05);
+    }
+}
+
+/* PC View Optimizations - Revolut Style */
+@media (min-width: 1024px) {
+    body {
+        background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+    }
+    
+    .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 2rem;
+    }
+    
+    /* Header optimization */
+    .bg-gradient-to-r.from-indigo-600.to-purple-600 {
+        max-width: 1000px;
+        margin: 0 auto 2rem auto;
+        border-radius: 1.5rem;
+    }
+    
+    /* Tab content optimization */
+    .tab-content {
+        max-width: 900px;
+        margin: 0 auto;
+        background: white;
+        border-radius: 1rem;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        padding: 2rem;
+    }
+    
+    /* Check-in button optimization */
+    #checkInBtn {
+        max-width: 300px !important;
+        margin: 0 auto;
+        display: block;
+        border-radius: 0.75rem;
+        font-size: 1rem;
+        padding: 0.875rem 1.5rem;
+        transition: all 0.2s ease;
+        box-shadow: 0 2px 4px rgba(79, 70, 229, 0.2);
+    }
+    
+    #checkInBtn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(79, 70, 229, 0.3);
+    }
+    
+    /* Panel de Productividad optimization */
+    .bg-white.p-4.rounded-lg.shadow-sm {
+        border-radius: 1rem;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        padding: 2rem;
+    }
+    
+    /* Form inputs optimization */
+    input[type="text"], select, textarea {
+        border-radius: 0.75rem;
+        border: 2px solid #e5e7eb;
+        transition: all 0.2s ease;
+    }
+    
+    input[type="text"]:focus, select:focus, textarea:focus {
+        border-color: #4f46e5;
+        box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+        outline: none;
+    }
+    
+    /* Button optimization */
+    button {
+        border-radius: 0.75rem;
+        transition: all 0.2s ease;
+        font-weight: 500;
+    }
+    
+    button:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    }
+    
+    /* Menu button positioning for PC */
+    #menuButton {
+        position: absolute !important;
+        top: 0 !important;
+        right: 0 !important;
+        background: rgba(255, 255, 255, 0.2) !important;
+        border: 1px solid rgba(255, 255, 255, 0.3) !important;
+        backdrop-filter: blur(10px) !important;
+        -webkit-backdrop-filter: blur(10px) !important;
+    }
+    
+    #menuButton:hover {
+        background: rgba(255, 255, 255, 0.3) !important;
+        border-color: rgba(255, 255, 255, 0.5) !important;
+    }
+}
+
+/* Side Menu Styles */
+#sideMenu {
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+}
+
+#sideMenu .transform {
+    box-shadow: -10px 0 30px rgba(0, 0, 0, 0.3);
+}
+
+/* Instructions Modal Styles */
+#instructionsModal .bg-white {
+    border-radius: 1.5rem;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+}
+
+/* Migration Modal Styles */
+#migrationModal .bg-white {
+    border-radius: 1.5rem;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+}
+
+/* Enhanced feedback bubble styles */
+#feedbackBubble {
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.08), 0 2px 4px -1px rgba(0, 0, 0, 0.04);
+    transition: all 0.2s ease-in-out;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+}
+
+#feedbackBubble:hover {
+    transform: scale(1.05);
+    box-shadow: 0 8px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+#feedbackBubble:active {
+    transform: scale(0.98);
+    transition: all 0.1s ease-in-out;
+}
+
+/* Mobile-specific feedback bubble positioning */
+@media (max-width: 768px) {
+    #feedbackBubble {
+        bottom: 6rem !important; /* Above mobile navigation bar (4rem) + extra space */
+        right: 1rem;
+        width: 3rem;
+        height: 3rem;
+        font-size: 1.125rem;
+        z-index: 50; /* Higher than mobile navigation */
+    }
+}
+
+/* Desktop-specific feedback bubble positioning */
+@media (min-width: 769px) {
+    #feedbackBubble {
+        bottom: 6rem;
+        right: 1rem;
+        width: 3rem;
+        height: 3rem;
+        font-size: 1.125rem;
     }
 } 

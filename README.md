@@ -1,9 +1,32 @@
 
-# 🎯 Habitus - Planificador Semanal v2.8.0
+# 🎯 Habitus - Planificador Semanal v4.0.0
 
 **Organiza tu semana con claridad y propósito usando el sistema de 4 pasos de Habitus.**
 
-## ✨ **NUEVA FUNCIONALIDAD: Sistema de Metas**
+## 🆕 **VERSIÓN 4.0.0 - Mejoras Principales**
+
+### **📱 Navegación Móvil Rediseñada**
+- **Barra de navegación fija inferior** para smartphones (estilo Revolut)
+- **Navegación unificada** entre PC y móvil
+- **Tabs responsivos** que se adaptan al tamaño de pantalla
+
+### **📊 Nueva Pestaña Dashboard**
+- **Panel de Productividad** movido a pestaña dedicada
+- **Información del Check-in** integrada en el dashboard
+- **Vista más limpia** en las pestañas principales
+
+### **🔧 Correcciones de Funcionalidad**
+- **Eliminación de botones de debug** del Perhaps List
+- **Corrección del salto automático** a la pestaña check-in
+- **Lógica de check-in mejorada** (solo disponible viernes-domingo)
+- **Bloqueo de acciones** hasta completar check-in (lunes)
+
+### **💬 Bubble de Feedback Mejorado**
+- **Posicionamiento optimizado** para no interferir con botones
+- **Estilo unificado** entre PC y móvil
+- **Colores azules sutiles** para mejor integración visual
+
+## ✨ **FUNCIONALIDAD: Sistema de Metas**
 
 ### **🎭 Sistema de 4 Pasos**
 

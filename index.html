@@ -154,74 +154,6 @@
             right: max(1.5rem, env(safe-area-inset-right) + 1rem);
         }
     }
-
-    /* Mobile bottom navigation styles */
-    .mobile-bottom-nav {
-        display: none;
-    }
-
-    @media (max-width: 768px) {
-        .mobile-bottom-nav {
-            display: flex;
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background: white;
-            border-top: 1px solid #e5e7eb;
-            padding: 0.5rem 0;
-            z-index: 40;
-            box-shadow: 0 -4px 6px -1px rgba(0, 0, 0, 0.1);
-        }
-
-        .mobile-bottom-nav .nav-item {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 0.5rem;
-            color: #6b7280;
-            text-decoration: none;
-            font-size: 0.75rem;
-            transition: all 0.2s ease;
-            min-height: 60px;
-            justify-content: center;
-        }
-
-        .mobile-bottom-nav .nav-item.active {
-            color: #4f46e5;
-        }
-
-        .mobile-bottom-nav .nav-item:hover {
-            color: #4f46e5;
-            background-color: #f3f4f6;
-        }
-
-        .mobile-bottom-nav .nav-icon {
-            font-size: 1.25rem;
-            margin-bottom: 0.25rem;
-        }
-
-        /* Add bottom padding to body to account for fixed navigation */
-        body {
-            padding-bottom: 80px;
-        }
-
-        /* Hide desktop tabs on mobile */
-        .desktop-tabs {
-            display: none;
-        }
-    }
-
-    @media (min-width: 769px) {
-        .mobile-bottom-nav {
-            display: none;
-        }
-        
-        .desktop-tabs {
-            display: flex;
-        }
-    }
 </style>
 <link rel="stylesheet" href="styles.css">
 <link href="./icons/icon-192x192.png" rel="icon" type="image/png"/></head>
@@ -230,7 +162,7 @@
 
 <!-- Modern gradient header -->
 <div class="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-xl shadow-lg p-4 sm:p-6 mb-6">
-    <div class="flex flex-col sm:flex-row items-center justify-center space-y-3 sm:space-y-0 sm:space-x-6">
+    <div class="flex flex-col sm:flex-row items-center justify-center space-y-3 sm:space-y-0 sm:space-x-6 relative">
         <!-- Logo container with larger white background and smaller image -->
         <div class="bg-white rounded-full p-4 sm:p-5 shadow-md">
             <img alt="Logo Habitus" 
@@ -245,6 +177,349 @@
                 <span class="block sm:inline text-lg sm:text-2xl">Planificador Semanal</span>
             </h1>
             <p class="text-indigo-100 text-sm sm:text-base italic break-words" id="randomVerse" style="min-height: 2.5em;">Planificador Semanal</p>
+        </div>
+        
+        <!-- Menu button - positioned absolutely in top right -->
+        <button id="menuButton" 
+                class="absolute top-0 right-0 sm:relative sm:top-auto sm:right-auto bg-white/20 hover:bg-white/30 text-white rounded-full p-2 sm:p-3 transition-all duration-200 hover:scale-110 active:scale-95 touch-manipulation"
+                onclick="toggleMenu()"
+                title="Menú de opciones">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+            </svg>
+        </button>
+    </div>
+</div>
+
+<!-- Side Menu Modal -->
+<div id="sideMenu" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
+    <div class="absolute right-0 top-0 h-full w-80 max-w-[90vw] bg-white shadow-2xl transform translate-x-full transition-transform duration-300 ease-in-out">
+        <!-- Menu Header -->
+        <div class="bg-gradient-to-r from-indigo-600 to-purple-600 p-6 text-white">
+            <div class="flex items-center justify-between">
+                <h2 class="text-xl font-semibold">Menú de Opciones</h2>
+                <button onclick="toggleMenu()" class="text-white hover:text-indigo-200 transition-colors">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        
+        <!-- Menu Items -->
+        <div class="p-4 space-y-2">
+            <!-- Instructions -->
+            <button onclick="showInstructions()" class="w-full text-left p-4 rounded-lg hover:bg-gray-50 transition-colors group">
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center group-hover:bg-blue-200 transition-colors">
+                        <span class="text-blue-600 text-lg">📖</span>
+                    </div>
+                    <div>
+                        <div class="font-medium text-gray-900">Instrucciones de Uso</div>
+                        <div class="text-sm text-gray-500">Guía completa del sistema</div>
+                    </div>
+                </div>
+            </button>
+            
+            <!-- Analytics -->
+            <button onclick="showAnalytics()" class="w-full text-left p-4 rounded-lg hover:bg-gray-50 transition-colors group">
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 bg-indigo-100 rounded-lg flex items-center justify-center group-hover:bg-indigo-200 transition-colors">
+                        <span class="text-indigo-600 text-lg">📊</span>
+                    </div>
+                    <div>
+                        <div class="font-medium text-gray-900">Analytics</div>
+                        <div class="text-sm text-gray-500">Dashboard de productividad</div>
+                    </div>
+                </div>
+            </button>
+            
+            <!-- Data Migration -->
+            <button onclick="showMigration()" class="w-full text-left p-4 rounded-lg hover:bg-gray-50 transition-colors group">
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center group-hover:bg-green-200 transition-colors">
+                        <span class="text-green-600 text-lg">🔄</span>
+                    </div>
+                    <div>
+                        <div class="font-medium text-gray-900">Migración de Datos</div>
+                        <div class="text-sm text-gray-500">Importar/Exportar información</div>
+                    </div>
+                </div>
+            </button>
+            
+            <!-- Feedback -->
+            <button onclick="showFeedback()" class="w-full text-left p-4 rounded-lg hover:bg-gray-50 transition-colors group">
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center group-hover:bg-purple-200 transition-colors">
+                        <span class="text-purple-600 text-lg">💬</span>
+                    </div>
+                    <div>
+                        <div class="font-medium text-gray-900">Dar Feedback</div>
+                        <div class="text-sm text-gray-500">Sugerencias y reportes</div>
+                    </div>
+                </div>
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Instructions Modal -->
+<div id="instructionsModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
+    <div class="absolute inset-4 bg-white rounded-xl shadow-2xl overflow-hidden flex flex-col">
+        <!-- Header -->
+        <div class="bg-gradient-to-r from-blue-600 to-indigo-600 p-6 text-white">
+            <div class="flex items-center justify-between">
+                <h2 class="text-xl font-semibold">📖 Instrucciones Completas de Habitus v4.0</h2>
+                <button onclick="hideInstructions()" class="text-white hover:text-blue-200 transition-colors">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        
+        <!-- Content -->
+        <div class="flex-1 overflow-y-auto p-6">
+            <div class="space-y-6">
+                <!-- Sistema de 4 Pasos -->
+                <div class="bg-gradient-to-r from-indigo-50 to-purple-50 p-4 rounded-lg">
+                    <h3 class="text-lg font-semibold text-indigo-800 mb-3">👤 Sistema de 4 Pasos de Habitus</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="bg-white p-3 rounded-lg">
+                            <h4 class="font-medium text-indigo-700 mb-2">1. 👤 Define tus Roles</h4>
+                            <p class="text-sm text-gray-600">Identifica los roles importantes en tu vida (Padre, Profesional, Amigo, etc.). Estos serán las categorías bajo las cuales organizarás tus tareas semanales.</p>
+                        </div>
+                        <div class="bg-white p-3 rounded-lg">
+                            <h4 class="font-medium text-indigo-700 mb-2">2. 🎯 Crea tus Metas</h4>
+                            <p class="text-sm text-gray-600">Para cada rol, define metas específicas que quieres alcanzar. Cada rol tendrá automáticamente una meta por defecto llamada 'Otras Prioridades'.</p>
+                        </div>
+                        <div class="bg-white p-3 rounded-lg">
+                            <h4 class="font-medium text-indigo-700 mb-2">3. 📝 Agrega tus Tareas</h4>
+                            <p class="text-sm text-gray-600">Para cada meta, añade las tareas que deseas realizar esta semana. Asigna el cuadrante correspondiente según su urgencia e importancia.</p>
+                        </div>
+                        <div class="bg-white p-3 rounded-lg">
+                            <h4 class="font-medium text-indigo-700 mb-2">4. ✅ Check-in Semanal</h4>
+                            <p class="text-sm text-gray-600">Al final de la semana, reflexiona sobre tus logros y aprendizajes. Este paso es obligatorio para mantener la continuidad.</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Matriz de Prioridades -->
+                <div class="bg-gradient-to-r from-green-50 to-emerald-50 p-4 rounded-lg">
+                    <h3 class="text-lg font-semibold text-green-800 mb-3">🔢 Matriz de Prioridades de Eisenhower</h3>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div class="bg-red-100 p-3 rounded-lg text-center">
+                            <div class="text-lg font-bold text-red-700 mb-1">I</div>
+                            <div class="text-sm font-medium text-red-800">Urgente e Importante</div>
+                            <div class="text-xs text-red-600 mt-1">Hacer de inmediato</div>
+                        </div>
+                        <div class="bg-blue-100 p-3 rounded-lg text-center">
+                            <div class="text-lg font-bold text-blue-700 mb-1">II</div>
+                            <div class="text-sm font-medium text-blue-800">No Urgente e Importante</div>
+                            <div class="text-xs text-blue-600 mt-1">Planificar tiempo</div>
+                        </div>
+                        <div class="bg-yellow-100 p-3 rounded-lg text-center">
+                            <div class="text-lg font-bold text-yellow-700 mb-1">III</div>
+                            <div class="text-sm font-medium text-yellow-800">Urgente y No Importante</div>
+                            <div class="text-xs text-yellow-600 mt-1">Delegar o minimizar</div>
+                        </div>
+                        <div class="bg-gray-100 p-3 rounded-lg text-center">
+                            <div class="text-lg font-bold text-gray-700 mb-1">IV</div>
+                            <div class="text-sm font-medium text-gray-800">No Urgente y No Importante</div>
+                            <div class="text-xs text-gray-600 mt-1">Evitar en lo posible</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Funcionalidades Avanzadas -->
+                <div class="bg-gradient-to-r from-purple-50 to-pink-50 p-4 rounded-lg">
+                    <h3 class="text-lg font-semibold text-purple-800 mb-3">✨ Funcionalidades Avanzadas</h3>
+                    <div class="space-y-3">
+                        <div class="bg-white p-3 rounded-lg">
+                            <h4 class="font-medium text-purple-700 mb-1">📊 Dashboard de Productividad</h4>
+                            <p class="text-sm text-gray-600">Vista general de tus métricas semanales, distribución de tareas por cuadrantes y insights de productividad.</p>
+                        </div>
+                        <div class="bg-white p-3 rounded-lg">
+                            <h4 class="font-medium text-purple-700 mb-1">💡 Perhaps List</h4>
+                            <p class="text-sm text-gray-600">Captura ideas que podrías incluir en tu planificación. No las pierdas de vista para futuras semanas.</p>
+                        </div>
+                        <div class="bg-white p-3 rounded-lg">
+                            <h4 class="font-medium text-purple-700 mb-1">🔄 Check-in Inteligente</h4>
+                            <p class="text-sm text-gray-600">Sistema automático que te recuerda completar el check-in semanal y bloquea acciones hasta completarlo.</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Consejos de Uso -->
+                <div class="bg-gradient-to-r from-orange-50 to-amber-50 p-4 rounded-lg">
+                    <h3 class="text-lg font-semibold text-orange-800 mb-3">💡 Consejos de Uso</h3>
+                    <ul class="space-y-2 text-sm text-gray-700">
+                        <li class="flex items-start space-x-2">
+                            <span class="text-orange-600 mt-0.5">•</span>
+                            <span>Revisa tu dashboard diariamente para mantener el foco en tus prioridades</span>
+                        </li>
+                        <li class="flex items-start space-x-2">
+                            <span class="text-orange-600 mt-0.5">•</span>
+                            <span>Mantén un equilibrio entre tareas urgentes (Q1) e importantes (Q2)</span>
+                        </li>
+                        <li class="flex items-start space-x-2">
+                            <span class="text-orange-600 mt-0.5">•</span>
+                            <span>Completa el check-in semanal para reflexionar y mejorar tu productividad</span>
+                        </li>
+                        <li class="flex items-start space-x-2">
+                            <span class="text-orange-600 mt-0.5">•</span>
+                            <span>Usa la Perhaps List para capturar ideas sin interrumpir tu flujo de trabajo</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Migration Modal -->
+<div id="migrationModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
+    <div class="absolute inset-4 bg-white rounded-xl shadow-2xl overflow-hidden flex flex-col">
+        <!-- Header -->
+        <div class="bg-gradient-to-r from-green-600 to-emerald-600 p-6 text-white">
+            <div class="flex items-center justify-between">
+                <h2 class="text-xl font-semibold">🔄 Migración de Datos</h2>
+                <button onclick="hideMigration()" class="text-white hover:text-green-200 transition-colors">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        
+        <!-- Content -->
+        <div class="flex-1 overflow-y-auto p-6">
+            <div class="space-y-6">
+                <!-- Export Section -->
+                <div class="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-lg">
+                    <h3 class="text-lg font-semibold text-blue-800 mb-3">📤 Exportar Datos</h3>
+                    <p class="text-sm text-gray-600 mb-4">Guarda una copia de seguridad de toda tu información en Habitus.</p>
+                    <div class="space-y-3">
+                        <button onclick="exportCompleteDataFromMenu()" class="w-full bg-blue-500 hover:bg-blue-600 text-white px-4 py-3 rounded-lg transition-colors flex items-center justify-center space-x-2">
+                            <span>📚</span>
+                            <span>Exportar Datos Completos</span>
+                        </button>
+                        <button onclick="exportTasksFromMenu()" class="w-full bg-purple-500 hover:bg-purple-600 text-white px-4 py-3 rounded-lg transition-colors flex items-center justify-center space-x-2">
+                            <span>📝</span>
+                            <span>Exportar Tareas Estructuradas</span>
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Import Section -->
+                <div class="bg-gradient-to-r from-green-50 to-emerald-50 p-4 rounded-lg">
+                    <h3 class="text-lg font-semibold text-green-800 mb-3">📥 Importar Datos</h3>
+                    <p class="text-sm text-gray-600 mb-4">Restaura tus datos desde una copia de seguridad anterior.</p>
+                    <div class="space-y-3">
+                        <input type="file" id="importFile" accept=".json" class="hidden">
+                        <button onclick="importDataFromMenu()" class="w-full bg-green-500 hover:bg-green-600 text-white px-4 py-3 rounded-lg transition-colors flex items-center justify-center space-x-2">
+                            <span>📁</span>
+                            <span>Seleccionar Archivo</span>
+                        </button>
+                        <div id="importStatus" class="text-sm text-gray-600 text-center hidden">
+                            Archivo seleccionado: <span id="fileName"></span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Warning -->
+                <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                    <div class="flex items-start space-x-2">
+                        <span class="text-yellow-600 text-lg">⚠️</span>
+                        <div>
+                            <h4 class="font-medium text-yellow-800">Importante</h4>
+                            <p class="text-sm text-yellow-700 mt-1">La importación de datos sobrescribirá toda la información actual. Asegúrate de hacer una copia de seguridad antes de importar.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Analytics Modal -->
+<div id="analyticsModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
+    <div class="absolute inset-4 bg-white rounded-xl shadow-2xl overflow-hidden flex flex-col">
+        <!-- Header -->
+        <div class="bg-gradient-to-r from-indigo-600 to-purple-600 p-6 text-white">
+            <div class="flex items-center justify-between">
+                <h2 class="text-xl font-semibold">📊 Analytics - Dashboard de Productividad</h2>
+                <button onclick="hideAnalytics()" class="text-white hover:text-indigo-200 transition-colors">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        
+        <!-- Content -->
+        <div class="flex-1 overflow-y-auto p-6">
+            <div class="space-y-6">
+                <!-- Panel de Productividad - Compacto y Valioso -->
+                <div class="bg-white p-4 rounded-lg shadow-sm border">
+                    <h3 class="text-lg font-semibold mb-4 flex items-center">
+                        <span class="mr-2">🎯</span>
+                        Panel de Productividad
+                    </h3>
+
+                    <!-- Vista rápida de estado actual -->
+                    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
+                        <div class="bg-blue-50 p-3 rounded-lg text-center">
+                            <div class="text-xl font-bold text-blue-600" id="totalTasks">0</div>
+                            <div class="text-xs text-blue-700">Tareas</div>
+                        </div>
+                        <div class="bg-green-50 p-3 rounded-lg text-center">
+                            <div class="text-xl font-bold text-green-600" id="completionPercentage">0%</div>
+                            <div class="text-xs text-green-700">Completado</div>
+                        </div>
+                        <div class="bg-purple-50 p-3 rounded-lg text-center">
+                            <div class="text-xl font-bold text-purple-600" id="activeRoles">0</div>
+                            <div class="text-xs text-purple-700">Roles</div>
+                        </div>
+                        <div class="bg-orange-50 p-3 rounded-lg text-center">
+                            <div class="text-xl font-bold text-orange-600" id="focusQuadrant">Q2</div>
+                            <div class="text-xs text-orange-700">Enfoque</div>
+                        </div>
+                    </div>
+
+                    <!-- Matrix de Eisenhower - Compacta -->
+                    <div class="bg-gray-50 p-3 rounded-lg mb-4">
+                        <h4 class="text-sm font-medium text-gray-700 mb-2 text-center">📊 Distribución Eisenhower</h4>
+                        <div class="grid grid-cols-2 gap-2">
+                            <div class="bg-red-100 p-2 rounded text-center">
+                                <div class="text-lg font-bold text-red-600" id="q1Count">0</div>
+                                <div class="text-xs text-red-700">Crisis (Q1)</div>
+                            </div>
+                            <div class="bg-blue-100 p-2 rounded text-center">
+                                <div class="text-lg font-bold text-blue-600" id="q2Count">0</div>
+                                <div class="text-xs text-blue-700">Importante (Q2)</div>
+                            </div>
+                            <div class="bg-yellow-100 p-2 rounded text-center">
+                                <div class="text-lg font-bold text-yellow-600" id="q3Count">0</div>
+                                <div class="text-xs text-yellow-700">Urgente (Q3)</div>
+                            </div>
+                            <div class="bg-gray-100 p-2 rounded text-center">
+                                <div class="text-lg font-bold text-gray-600" id="q4Count">0</div>
+                                <div class="text-xs text-gray-700">Pérdidas (Q4)</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Insights dinámicos -->
+                    <div id="productivityInsights" class="bg-gradient-to-r from-indigo-50 to-purple-50 p-3 rounded-lg">
+                        <h4 class="text-sm font-medium text-indigo-800 mb-2 flex items-center">
+                            <span class="mr-1">🧠</span>
+                            Insights de Productividad
+                        </h4>
+                        <div class="text-xs text-indigo-700">Analizando patrones...</div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </div>
@@ -261,6 +536,128 @@ function showRandomVerse() {
 // Show random verse when page loads
 document.addEventListener('DOMContentLoaded', showRandomVerse);
 
+// Menu functions
+function toggleMenu() {
+    const menu = document.getElementById('sideMenu');
+    const isVisible = !menu.classList.contains('hidden');
+    
+    if (isVisible) {
+        hideMenu();
+    } else {
+        showMenu();
+    }
+}
+
+function showMenu() {
+    const menu = document.getElementById('sideMenu');
+    const menuContent = menu.querySelector('.transform');
+    menu.classList.remove('hidden');
+    setTimeout(() => {
+        menuContent.classList.remove('translate-x-full');
+    }, 10);
+}
+
+function hideMenu() {
+    const menu = document.getElementById('sideMenu');
+    const menuContent = menu.querySelector('.transform');
+    menuContent.classList.add('translate-x-full');
+    setTimeout(() => {
+        menu.classList.add('hidden');
+    }, 300);
+}
+
+function showInstructions() {
+    hideMenu();
+    setTimeout(() => {
+        document.getElementById('instructionsModal').classList.remove('hidden');
+    }, 350);
+}
+
+function hideInstructions() {
+    document.getElementById('instructionsModal').classList.add('hidden');
+}
+
+function showAnalytics() {
+    hideMenu();
+    setTimeout(() => {
+        document.getElementById('analyticsModal').classList.remove('hidden');
+        // Update analytics data when modal is shown
+        if (window.Tasks && window.Tasks.updateUI) {
+            window.Tasks.updateUI();
+        }
+    }, 350);
+}
+
+function hideAnalytics() {
+    document.getElementById('analyticsModal').classList.add('hidden');
+}
+
+function showMigration() {
+    hideMenu();
+    setTimeout(() => {
+        document.getElementById('migrationModal').classList.remove('hidden');
+    }, 350);
+}
+
+function hideMigration() {
+    document.getElementById('migrationModal').classList.add('hidden');
+}
+
+function showFeedback() {
+    hideMenu();
+    setTimeout(() => {
+        App.showFeedbackModal();
+    }, 350);
+}
+
+// Menu migration functions that connect to main page functions
+function exportCompleteDataFromMenu() {
+    hideMenu();
+    setTimeout(() => {
+        // Call the main page export function
+        if (window.Migration && window.Migration.exportCompleteData) {
+            window.Migration.exportCompleteData();
+        } else {
+            console.error('Migration module not available');
+        }
+    }, 350);
+}
+
+function exportTasksFromMenu() {
+    hideMenu();
+    setTimeout(() => {
+        // Call the main page export tasks function with structured data
+        if (window.Migration && window.Migration.exportTasks) {
+            window.Migration.exportTasks();
+        } else {
+            console.error('Migration module not available');
+        }
+    }, 350);
+}
+
+function importDataFromMenu() {
+    hideMenu();
+    setTimeout(() => {
+        // Trigger the file input click
+        const importFile = document.getElementById('importFile');
+        if (importFile) {
+            importFile.click();
+            // Add event listener for file selection
+            importFile.onchange = function(event) {
+                const file = event.target.files[0];
+                if (file) {
+                    // Call the main page import function
+                    if (window.Migration && window.Migration.handleImportFile) {
+                        window.Migration.handleImportFile(file);
+                    } else {
+                        console.error('Migration module not available');
+                    }
+                }
+            };
+        }
+    }, 350);
+}
+
 // Toggle instructions function
 function toggleInstructions() {
     const toggle = document.getElementById('instructionsToggle');
@@ -276,41 +673,14 @@ function toggleInstructions() {
 }
 </script>
 
-<!-- Recuadro de instrucciones - Colapsable en móvil -->
-<div class="bg-blue-100 border-l-4 border-blue-500 text-blue-900 p-3 mb-4 rounded">
-<div class="flex items-center cursor-pointer gap-2" onclick="toggleInstructions()">
-<button class="text-blue-700 hover:text-blue-900" id="instructionsToggle">▶</button>
-<h3 class="font-medium no-select" data-i18n="instructions_title">📖 Instrucciones de uso</h3>
-</div>
-<div class="mt-2 hidden" id="instructionsContent">
-<ul class="list-disc list-inside text-sm space-y-2">
-<li data-i18n="inst_1">🎭 <strong>Paso 1 - Define tus Roles:</strong> Identifica los roles importantes en tu vida (por ejemplo: Padre, Profesional, Amigo). Estos serán las categorías bajo las cuales organizarás tus tareas semanales.</li>
-<li data-i18n="inst_2">🎯 <strong>Paso 2 - Crea tus Metas:</strong> Para cada rol, define metas específicas que quieres alcanzar. Cada rol tendrá automáticamente una meta por defecto llamada 'Otras Prioridades'.</li>
-<li data-i18n="inst_2_1">📝 <strong>Paso 3 - Agrega tus Tareas:</strong> Para cada meta, añade las tareas que deseas realizar esta semana. Escribe una breve descripción y asigna el cuadrante correspondiente según su urgencia e importancia.</li>
-<li data-i18n="inst_3">🔢 Prioriza con los Cuadrantes: Utiliza la Matriz de Prioridades (I-IV) para clasificar cada tarea:</li>
-<div class="ml-6 mt-1 text-sm" data-i18n="inst_3_sub">
-    <ul class="list-none ml-4 mt-1">
-        <li data-i18n="inst_4">I – Urgente e Importante (hacer de inmediato).</li>
-        <li data-i18n="inst_5">II – No Urgente e Importante (planificar tiempo para hacer).</li>
-        <li data-i18n="inst_6">III – Urgente y No Importante (intentar delegar o minimizar).</li>
-        <li data-i18n="inst_7">IV – No Urgente y No Importante (evitar en lo posible).</li>
-    </ul>
-</div>
-<li data-i18n="inst_8">✅ <strong>Marca las Completadas:</strong> A medida que termines cada tarea, márcala como realizada con la casilla de verificación.</li>
-<li data-i18n="inst_9">🔄 <strong>Vista de Roles/Cuadrantes:</strong> Alterna entre la vista agrupada por roles o por cuadrantes usando las pestañas para obtener diferentes perspectivas de tus tareas.</li>
-<li data-i18n="inst_10">📊 <strong>Revisa tus Métricas:</strong> Al finalizar la semana, revisa el resumen de tareas completadas y pendientes, y reflexiona sobre tu semana en Revisión Semanal.</li>
-<li data-i18n="inst_11">📋 <strong>Exporta y Reinicia:</strong> Guarda un registro de tu semana utilizando Exportar Métricas y Exportar Tareas. Luego comienza una nueva semana con el botón Nueva Semana: solo las tareas completadas se removerán, las pendientes permanecerán para la siguiente semana.</li>
-</ul>
-</div>
-</div>
 
 <!-- Sistema de Pestañas Principales -->
 <div class="mb-6">
-    <!-- Pestañas Principales - Desktop -->
-    <div class="bg-white rounded-lg shadow-sm p-4 mb-6 desktop-tabs">
+    <!-- Pestañas Principales -->
+    <div class="bg-white rounded-lg shadow-sm p-4 mb-6 max-w-4xl mx-auto">
         <div class="flex border-b border-gray-300 mb-4">
             <button class="tab-main active px-6 py-3 text-sm font-medium text-gray-700 border-b-2 border-indigo-500 touch-manipulation" data-tab="roles">
-                🎭 Roles
+                👤 Roles
             </button>
             <button class="tab-main px-6 py-3 text-sm font-medium text-gray-600 hover:text-gray-800 border-b-2 border-transparent touch-manipulation" data-tab="goals">
                 🎯 Metas
@@ -318,14 +688,12 @@ function toggleInstructions() {
             <button class="tab-main px-6 py-3 text-sm font-medium text-gray-600 hover:text-gray-800 border-b-2 border-transparent touch-manipulation" data-tab="tasks">
                 📝 Tareas
             </button>
-            <button class="tab-main px-6 py-3 text-sm font-medium text-gray-600 hover:text-gray-800 border-b-2 border-transparent touch-manipulation" data-tab="dashboard">
-                📊 Dashboard
-            </button>
+
             <button class="tab-main px-6 py-3 text-sm font-medium text-gray-600 hover:text-gray-800 border-b-2 border-transparent touch-manipulation" data-tab="checkin">
                 ✅ Check-in
             </button>
             <button class="tab-main px-6 py-3 text-sm font-medium text-gray-600 hover:text-gray-800 border-b-2 border-transparent touch-manipulation" data-tab="perhaps">
-                💡 Perhaps List
+                💡 Ideas
             </button>
         </div>
         
@@ -343,7 +711,7 @@ function toggleInstructions() {
             <button onclick="testGoalsModule()" class="bg-purple-500 text-white px-3 py-1 rounded text-xs hover:bg-purple-600">
                 🎯 Test Goals
             </button>
-            <button onclick="testTasksModule()" class="bg-orange-500 text-white px-3 py-2 rounded text-xs hover:bg-orange-600">
+            <button onclick="testTasksModule()" class="bg-orange-500 text-white px-3 py-1 rounded text-xs hover:bg-orange-600">
                 📝 Test Tasks
             </button>
             <button onclick="forceRenderAll()" class="bg-red-500 text-white px-3 py-1 rounded text-xs hover:bg-red-600">
@@ -384,7 +752,7 @@ function toggleInstructions() {
 
     <!-- Pestaña: Roles -->
     <div class="tab-content active" data-tab="roles">
-        <h2 class="text-xl font-semibold mb-2 no-select" data-i18n="roles">🎭 Gestión de Roles</h2>
+        <h2 class="text-xl font-semibold mb-2 no-select" data-i18n="roles">👤 Gestión de Roles</h2>
         <p class="text-sm text-gray-600 mb-3">Define y gestiona los roles importantes en tu vida (Padre, Profesional, Amigo, etc.)</p>
         <div class="flex gap-2">
             <input class="border rounded px-3 py-2 flex-1 touch-manipulation" data-i18n-placeholder="placeholder_role" id="roleInput" placeholder="Nuevo rol..." type="text"/>
@@ -454,87 +822,7 @@ function toggleInstructions() {
 <div class="mb-6 hidden overflow-x-hidden" id="quadrantsView"></div>
 </div>
 
-    <!-- Pestaña: Dashboard -->
-    <div class="tab-content hidden" data-tab="dashboard">
-        <h2 class="text-xl font-semibold mb-2 no-select">📊 Dashboard</h2>
-        <p class="text-sm text-gray-600 mb-3">Vista general de tu productividad y métricas semanales.</p>
-        
-        <!-- Panel de Productividad - Compacto y Valioso -->
-        <div class="mb-6 bg-white p-4 rounded-lg shadow-sm">
-            <h2 class="text-lg font-semibold mb-4 flex items-center">
-                <span class="mr-2">🎯</span>
-                Panel de Productividad
-            </h2>
 
-            <!-- Vista rápida de estado actual -->
-            <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
-                <div class="bg-blue-50 p-3 rounded-lg text-center">
-                    <div class="text-xl font-bold text-blue-600" id="totalTasks">0</div>
-                    <div class="text-xs text-blue-700">Tareas</div>
-                </div>
-                <div class="bg-green-50 p-3 rounded-lg text-center">
-                    <div class="text-xl font-bold text-green-600" id="completionPercentage">0%</div>
-                    <div class="text-xs text-green-700">Completado</div>
-                </div>
-                <div class="bg-purple-50 p-3 rounded-lg text-center">
-                    <div class="text-xl font-bold text-purple-600" id="activeRoles">0</div>
-                    <div class="text-xs text-purple-700">Roles</div>
-                </div>
-                <div class="bg-orange-50 p-3 rounded-lg text-center">
-                    <div class="text-xl font-bold text-orange-600" id="focusQuadrant">Q2</div>
-                    <div class="text-xs text-orange-700">Enfoque</div>
-                </div>
-            </div>
-
-            <!-- Matrix de Eisenhower - Compacta -->
-            <div class="bg-gray-50 p-3 rounded-lg mb-4">
-                <h3 class="text-sm font-medium text-gray-700 mb-2 text-center">📊 Distribución Eisenhower</h3>
-                <div class="grid grid-cols-2 gap-2">
-                    <div class="bg-red-100 p-2 rounded text-center">
-                        <div class="text-lg font-bold text-red-600" id="q1Count">0</div>
-                        <div class="text-xs text-red-700">Crisis (Q1)</div>
-                    </div>
-                    <div class="bg-blue-100 p-2 rounded text-center">
-                        <div class="text-lg font-bold text-blue-600" id="q2Count">0</div>
-                        <div class="text-xs text-blue-700">Importante (Q2)</div>
-                    </div>
-                    <div class="bg-yellow-100 p-2 rounded text-center">
-                        <div class="text-lg font-bold text-yellow-600" id="q3Count">0</div>
-                        <div class="text-xs text-yellow-700">Urgente (Q3)</div>
-                    </div>
-                    <div class="bg-gray-100 p-2 rounded text-center">
-                        <div class="text-lg font-bold text-gray-600" id="q4Count">0</div>
-                        <div class="text-xs text-gray-700">Pérdidas (Q4)</div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Insights dinámicos -->
-            <div id="productivityInsights" class="bg-gradient-to-r from-indigo-50 to-purple-50 p-3 rounded-lg">
-                <h3 class="text-sm font-medium text-indigo-800 mb-2 flex items-center">
-                    <span class="mr-1">🧠</span>
-                    Insights de Productividad
-                </h3>
-                <div class="text-xs text-indigo-700">Analizando patrones...</div>
-            </div>
-        </div>
-
-        <!-- Información del Check-in -->
-        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
-            <h3 class="font-semibold text-blue-800 flex items-center mb-2">
-                <span class="mr-2">📊</span>
-                <span>Información del Check-in</span>
-            </h3>
-            <p class="text-sm text-blue-600 mb-2">
-                El check-in semanal te permite reflexionar sobre tus logros, desafíos y aprendizajes de la semana anterior.
-            </p>
-            <ul class="text-sm text-blue-700 space-y-1">
-                <li>• <strong>Obligatorio:</strong> Se requiere cada semana para mantener la continuidad</li>
-                <li>• <strong>Reflexión:</strong> Evalúa tu productividad y planifica mejoras</li>
-                <li>• <strong>Nueva Semana:</strong> Solo las tareas completadas se remueven</li>
-            </ul>
-        </div>
-    </div>
 
     <!-- Pestaña: Check-in -->
     <div class="tab-content hidden" data-tab="checkin">
@@ -554,129 +842,87 @@ function toggleInstructions() {
                 </button>
             </div>
         </div>
+        
+
     </div>
 
-    <!-- Pestaña: Perhaps List -->
-    <div class="tab-content hidden" data-tab="perhaps">
-        <h2 class="text-xl font-semibold mb-2 no-select">💡 Perhaps List</h2>
-        <p class="text-sm text-gray-600 mb-3">Captura ideas que podrías incluir en tu planificación. No las pierdas de vista.</p>
-        
-        <!-- Formulario para agregar ideas -->
-        <div class="mb-4">
-            <div class="bg-purple-50 border border-purple-200 rounded-lg p-4">
-                <h3 class="font-semibold text-purple-800 flex items-center mb-3">
-                    <span class="mr-2">✨</span>
-                    <span>Nueva Idea</span>
-                </h3>
-                <div class="flex gap-2">
-                    <input class="border rounded px-3 py-2 flex-1 touch-manipulation" 
-                           id="ideaInput" 
-                           placeholder="Describe tu idea..." 
-                           type="text"/>
-                    <button class="bg-purple-500 text-white px-4 py-2 rounded hover:bg-purple-600 active:bg-purple-700 touch-manipulation" 
-                            id="addIdeaBtn">
-                        ➕ Agregar
-                    </button>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Buscador de ideas -->
-        <div class="mb-4">
-            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <h3 class="font-semibold text-blue-800 flex items-center mb-3">
-                    <span class="mr-2">🔍</span>
-                    <span>Buscar Ideas</span>
-                </h3>
-                <input class="border rounded px-3 py-2 w-full touch-manipulation" 
-                       id="searchIdeasInput" 
-                       placeholder="Buscar en tus ideas..." 
+<!-- Pestaña: Perhaps List -->
+<div class="tab-content hidden" data-tab="perhaps">
+    <h2 class="text-xl font-semibold mb-2 no-select">💡 Perhaps List</h2>
+    <p class="text-sm text-gray-600 mb-3">Captura ideas que podrías incluir en tu planificación. No las pierdas de vista.</p>
+    
+    <!-- Formulario para agregar ideas -->
+    <div class="mb-4">
+        <div class="bg-purple-50 border border-purple-200 rounded-lg p-4">
+            <h3 class="font-semibold text-purple-800 flex items-center mb-3">
+                <span class="mr-2">✨</span>
+                <span>Nueva Idea</span>
+            </h3>
+            <div class="flex gap-2">
+                <input class="border rounded px-3 py-2 flex-1 touch-manipulation" 
+                       id="ideaInput" 
+                       placeholder="Describe tu idea..." 
                        type="text"/>
-            </div>
-        </div>
-        
-        <!-- Lista de ideas -->
-        <div class="mb-4">
-            <div class="bg-white border border-gray-200 rounded-lg p-4">
-                <h3 class="font-semibold text-gray-800 flex items-center justify-between mb-3">
-                    <span class="flex items-center">
-                        <span class="mr-2">📝</span>
-                        <span>Mis Ideas</span>
-                    </span>
-                    <div class="flex items-center space-x-4">
-                        <div class="text-sm text-gray-500">
-                            <span id="ideasCount">0</span> ideas
-                        </div>
-                        <div class="flex space-x-2">
-                            <button onclick="Perhaps.toggleImplementedView()" 
-                                    id="toggleImplementedBtn"
-                                    class="bg-green-200 text-green-700 px-3 py-1 rounded text-xs hover:bg-green-300 active:bg-green-400 touch-manipulation">
-                                ✅ Ver Implementadas
-                            </button>
-                            <button onclick="Perhaps.toggleArchivedView()" 
-                                    id="toggleArchivedBtn"
-                                    class="bg-gray-200 text-gray-700 px-3 py-1 rounded text-xs hover:bg-gray-300 active:bg-gray-400 touch-manipulation">
-                                📁 Ver Archivadas
-                            </button>
-                        </div>
-                    </div>
-                </h3>
-                <div id="ideasList" class="space-y-3">
-                    <!-- Las ideas se renderizarán dinámicamente aquí -->
-                </div>
+                <button class="bg-purple-500 text-white px-4 py-2 rounded hover:bg-purple-600 active:bg-purple-700 touch-manipulation" 
+                        id="addIdeaBtn">
+                    ➕ Agregar
+                </button>
             </div>
         </div>
     </div>
+    
+    <!-- Buscador de ideas -->
+    <div class="mb-4">
+        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <h3 class="font-semibold text-blue-800 flex items-center mb-3">
+                <span class="mr-2">🔍</span>
+                <span>Buscar Ideas</span>
+            </h3>
+            <input class="border rounded px-3 py-2 w-full touch-manipulation" 
+                   id="searchIdeasInput" 
+                   placeholder="Buscar en tus ideas..." 
+                   type="text"/>
+        </div>
+    </div>
+    
+    <!-- Lista de ideas -->
+    <div class="mb-4">
+        <div class="bg-white border border-gray-200 rounded-lg p-4">
+            <h3 class="font-semibold text-gray-800 flex items-center justify-between mb-3">
+                <span class="flex items-center">
+                    <span class="mr-2">📝</span>
+                    <span>Mis Ideas</span>
+                </span>
+                <div class="flex items-center space-x-4">
+                    <div class="text-sm text-gray-500">
+                        <span id="ideasCount">0</span> ideas
+                    </div>
+                    <div class="flex space-x-2">
+                        <button onclick="Perhaps.toggleImplementedView()" 
+                                id="toggleImplementedBtn"
+                                class="bg-green-200 text-green-700 px-3 py-1 rounded text-xs hover:bg-green-300 active:bg-green-400 touch-manipulation">
+                            ✅ Ver Implementadas
+                        </button>
+                        <button onclick="Perhaps.toggleArchivedView()" 
+                                id="toggleArchivedBtn"
+                                class="bg-gray-200 text-gray-700 px-3 py-1 rounded text-xs hover:bg-gray-300 active:bg-gray-400 touch-manipulation">
+                            📁 Ver Archivadas
+                        </button>
+                    </div>
+                </div>
+            </h3>
+            <div id="ideasList" class="space-y-3">
+                <!-- Las ideas se renderizarán dinámicamente aquí -->
+            </div>
+        </div>
+    </div>
+    
+
 </div>
 
-<!-- Botones de migración de datos -->
-<div class="mb-6">
-<h3 class="text-lg font-semibold mb-3 flex items-center">
-    <span class="mr-2">💾</span>
-    <span data-i18n="migration_title">Migración de Datos</span>
-</h3>
-<div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-    <button id="exportCompleteBtn" class="bg-blue-500 text-white text-sm px-4 py-3 rounded hover:bg-blue-600 active:bg-blue-700 touch-manipulation flex items-center justify-center">
-        <span class="mr-2">📤</span>
-        <span data-i18n="export_complete">Exportar Datos Completos</span>
-    </button>
-    <button id="importDataBtn" class="bg-green-500 text-white text-sm px-4 py-3 rounded hover:bg-green-600 active:bg-green-700 touch-manipulation flex items-center justify-center">
-        <span class="mr-2">📥</span>
-        <span data-i18n="import_data">Importar Datos</span>
-    </button>
-</div>
-<p class="text-xs text-gray-500 mt-2" data-i18n="migration_description">
-    Exporta todos tus datos para migrar a otro dispositivo o crear un respaldo completo.
-</p>
-</div>
 
-<!-- Mobile Bottom Navigation -->
-<nav class="mobile-bottom-nav">
-    <a href="#" class="nav-item active" data-tab="roles">
-        <div class="nav-icon">🎭</div>
-        <span>Roles</span>
-    </a>
-    <a href="#" class="nav-item" data-tab="goals">
-        <div class="nav-icon">🎯</div>
-        <span>Metas</span>
-    </a>
-    <a href="#" class="nav-item" data-tab="tasks">
-        <div class="nav-icon">📝</div>
-        <span>Tareas</span>
-    </a>
-    <a href="#" class="nav-item" data-tab="dashboard">
-        <div class="nav-icon">📊</div>
-        <span>Dashboard</span>
-    </a>
-    <a href="#" class="nav-item" data-tab="checkin">
-        <div class="nav-icon">✅</div>
-        <span>Check-in</span>
-    </a>
-    <a href="#" class="nav-item" data-tab="perhaps">
-        <div class="nav-icon">💡</div>
-        <span>Ideas</span>
-    </a>
-</nav>
+
+
 
 <!-- Add floating feedback button -->
 <button id="feedbackBubble" 
@@ -799,9 +1045,6 @@ async function initApp() {
         document.getElementById('exportCompleteBtn')?.addEventListener('click', Migration.exportCompleteData);
         document.getElementById('importDataBtn')?.addEventListener('click', Migration.handleImportFile);
         
-        // Setup mobile navigation
-        setupMobileNavigation();
-        
         // Migrate existing tasks to include goals if needed
         if (Migration && Migration.migrateTasksToGoals) {
             try {
@@ -816,16 +1059,16 @@ async function initApp() {
         
 
         
-        // Force CheckIn UI update after all modules are loaded
-        console.log('🔄 Forcing CheckIn UI update after module initialization...');
-        if (CheckIn && CheckIn.forceUIUpdate) {
-            CheckIn.forceUIUpdate();
+        // Update CheckIn UI after all modules are loaded (don't force modal)
+        console.log('🔄 Updating CheckIn UI after module initialization...');
+        if (CheckIn && CheckIn.updateUI) {
+            CheckIn.updateUI();
         }
         
-        // Additional direct calls to ensure UI is correct
+        // Additional UI update to ensure everything is correct
         setTimeout(() => {
-            if (CheckIn && CheckIn.forceUIUpdate) {
-                CheckIn.forceUIUpdate();
+            if (CheckIn && CheckIn.updateUI) {
+                CheckIn.updateUI();
                 console.log('✅ Final CheckIn UI update completed');
             }
         }, 100);
@@ -1124,10 +1367,10 @@ async function initApp() {
                     };
                 },
                 
-                // Force UI update
+                // Update UI (don't force modal)
                 forceUIUpdate: () => {
-                    console.log('🔄 Forcing UI update...');
-                    CheckIn?.forceUIUpdate();
+                    console.log('🔄 Updating UI...');
+                    CheckIn?.updateUI();
                 },
                 
                 // Quick test method
@@ -1414,10 +1657,48 @@ function setupTabNavigation() {
                 const tabName = tab.dataset.tab;
                 console.log('[DEBUG] Tab clicked:', tabName);
                 
-                // Use unified tab switching function
-                switchToTab(tabName);
+                // FIRST: Update tab indicators (remove active from all, add to clicked)
+                tabs.forEach(t => {
+                    t.classList.remove('active');
+                    t.classList.remove('border-indigo-500', 'text-gray-700');
+                    t.classList.add('border-transparent', 'text-gray-600');
+                });
                 
-                // Force content render if needed
+                // Add active state to clicked tab
+                tab.classList.add('active');
+                tab.classList.add('border-indigo-500', 'text-gray-700');
+                tab.classList.remove('border-transparent', 'text-gray-600');
+                
+                // SECOND: Hide all content (but preserve it)
+                tabContents.forEach(content => {
+                    if (content.dataset.tab === tabName) {
+                        // Show this content
+                        content.classList.remove('hidden');
+                        content.classList.add('active');
+                        console.log(`[DEBUG] Showing content for: ${tabName}`);
+                    } else {
+                        // Hide other content
+                        content.classList.add('hidden');
+                        content.classList.remove('active');
+                        console.log(`[DEBUG] Hiding content for: ${content.dataset.tab}`);
+                    }
+                });
+                
+                // THIRD: Check if content needs rendering
+                const targetContent = document.querySelector(`[data-tab="${tabName}"]`);
+                if (targetContent) {
+                    console.log('[DEBUG] Content visibility set for:', tabName);
+                    
+                    // Force render content for this tab if it's empty
+                    if (targetContent.innerHTML.trim().length === 0) {
+                        console.log(`[DEBUG] Tab ${tabName} is empty, forcing render...`);
+                        forceTabContent(tabName);
+                    }
+                }
+                
+                console.log('[DEBUG] Tab switch complete for:', tabName);
+                
+                // Ensure tab state is consistent and force content render
                 setTimeout(() => {
                     fixTabState();
                     forceTabContent(tabName);
@@ -1539,21 +1820,26 @@ window.addEventListener('load', () => {
             console.log('[DEBUG] All modules available, stopping monitor');
             clearInterval(moduleMonitor);
             
-            // Force initial render
+            // Gentle UI update without forcing renders (prevents automatic check-in modal)
             setTimeout(() => {
-                console.log('[DEBUG] Forcing initial render...');
-                forceRenderAll();
+                console.log('[DEBUG] Updating UI after module initialization...');
                 
-                // Also force content for the active tab
+                // Only update the active tab content, don't force render all
                 const activeTab = document.querySelector('.tab-main.active')?.dataset.tab;
                 if (activeTab) {
-                    console.log('[DEBUG] Forcing content for active tab:', activeTab);
-                    forceTabContent(activeTab);
+                    console.log('[DEBUG] Updating content for active tab:', activeTab);
+                    // Use gentle update instead of force render
+                    if (activeTab === 'roles' && window.Tasks?.updateUI) {
+                        window.Tasks.updateUI();
+                    } else if (activeTab === 'goals' && window.Goals?.renderGoalsView) {
+                        window.Goals.renderGoalsView();
+                    } else if (activeTab === 'tasks' && window.Tasks?.updateUI) {
+                        window.Tasks.updateUI();
+                    }
                 }
                 
-                // Restore all tab content
-                console.log('[DEBUG] Restoring all tab content...');
-                restoreAllTabContent();
+                // Don't restore all tab content automatically
+                console.log('[DEBUG] UI update completed - no automatic renders');
             }, 1000);
         }
         
@@ -1685,10 +1971,10 @@ function forceRenderAll() {
         window.Tasks.updateUI();
     }
     
-    // Force CheckIn render
-    if (window.CheckIn && window.CheckIn.forceUIUpdate) {
-        console.log('Forcing CheckIn render...');
-        window.CheckIn.forceUIUpdate();
+    // Update CheckIn UI (don't force modal)
+    if (window.CheckIn && window.CheckIn.updateUI) {
+        console.log('Updating CheckIn UI...');
+        window.CheckIn.updateUI();
     }
     
     // Check results
@@ -2142,44 +2428,14 @@ function diagnoseTabContent() {
     console.log('[DEBUG] === END DIAGNOSIS ===');
 }
 
-// Force content rendering for specific tab
+// Force content rendering for specific tab (without changing active tab)
 function forceTabContent(tabName) {
     console.log(`[DEBUG] === FORCING CONTENT FOR TAB: ${tabName} ===`);
     
-    // First, ensure tab is active
-    const targetTab = document.querySelector(`[data-tab="${tabName}"]`);
-    if (!targetTab) {
-        console.error(`[DEBUG] Tab ${tabName} not found`);
-        return;
-    }
-    
-    // Activate tab
-    document.querySelectorAll('.tab-main').forEach(tab => {
-        tab.classList.remove('active', 'border-indigo-500', 'text-gray-700');
-        tab.classList.add('border-transparent', 'text-gray-600');
-    });
-    
-    targetTab.classList.add('active', 'border-indigo-500', 'text-gray-700');
-    targetTab.classList.remove('border-transparent', 'text-gray-600');
-    
-    // Show content - ONLY change visibility, don't hide everything
-    document.querySelectorAll('.tab-content').forEach(content => {
-        if (content.dataset.tab === tabName) {
-            // Show this content
-            content.classList.remove('hidden');
-            content.classList.add('active');
-            console.log(`[DEBUG] Showing content for: ${tabName}`);
-        } else {
-            // Hide other content
-            content.classList.add('hidden');
-            content.classList.remove('active');
-            console.log(`[DEBUG] Hiding content for: ${content.dataset.tab}`);
-        }
-    });
-    
+    // DON'T change the active tab - just update content if needed
     const targetContent = document.querySelector(`[data-tab="${tabName}"]`);
     if (targetContent) {
-        console.log(`[DEBUG] Content for ${tabName} is now visible`);
+        console.log(`[DEBUG] Content for ${tabName} found`);
         
         // Check if content is empty and force render if needed
         if (targetContent.innerHTML.trim().length === 0) {
@@ -2204,9 +2460,9 @@ function forceTabContent(tabName) {
                     }
                     break;
                 case 'checkin':
-                    if (window.CheckIn && window.CheckIn.forceUIUpdate) {
-                        console.log('[DEBUG] Forcing CheckIn render...');
-                        window.CheckIn.forceUIUpdate();
+                    if (window.CheckIn && window.CheckIn.updateUI) {
+                        console.log('[DEBUG] Updating CheckIn UI...');
+                        window.CheckIn.updateUI();
                     } else {
                         console.error('[DEBUG] CheckIn module not available');
                     }
@@ -2223,78 +2479,11 @@ function forceTabContent(tabName) {
         } else {
             console.log(`[DEBUG] Tab ${tabName} already has content, no render needed`);
         }
+    } else {
+        console.error(`[DEBUG] Content element for tab ${tabName} not found`);
     }
     
     console.log(`[DEBUG] === END FORCE CONTENT FOR ${tabName} ===`);
-}
-
-// Setup mobile bottom navigation
-function setupMobileNavigation() {
-    const mobileNavItems = document.querySelectorAll('.mobile-bottom-nav .nav-item');
-    
-    mobileNavItems.forEach(item => {
-        item.addEventListener('click', (e) => {
-            e.preventDefault();
-            const tabName = item.dataset.tab;
-            
-            // Update mobile nav active state
-            mobileNavItems.forEach(navItem => navItem.classList.remove('active'));
-            item.classList.add('active');
-            
-            // Switch to the corresponding tab
-            switchToTab(tabName);
-        });
-    });
-}
-
-// Unified tab switching function
-function switchToTab(tabName) {
-    console.log('[Navigation] Switching to tab:', tabName);
-    
-    // Update desktop tabs
-    const desktopTabs = document.querySelectorAll('.tab-main');
-    desktopTabs.forEach(tab => {
-        tab.classList.remove('active', 'border-indigo-500', 'text-gray-700');
-        tab.classList.add('border-transparent', 'text-gray-600');
-        if (tab.dataset.tab === tabName) {
-            tab.classList.add('active', 'border-indigo-500', 'text-gray-700');
-            tab.classList.remove('border-transparent', 'text-gray-600');
-        }
-    });
-    
-    // Update mobile nav
-    const mobileNavItems = document.querySelectorAll('.mobile-bottom-nav .nav-item');
-    mobileNavItems.forEach(navItem => {
-        navItem.classList.remove('active');
-        if (navItem.dataset.tab === tabName) {
-            navItem.classList.add('active');
-        }
-    });
-    
-    // Show/hide content
-    const tabContents = document.querySelectorAll('.tab-content');
-    tabContents.forEach(content => {
-        if (content.dataset.tab === tabName) {
-            content.classList.remove('hidden');
-            content.classList.add('active');
-        } else {
-            content.classList.add('hidden');
-            content.classList.remove('active');
-        }
-    });
-    
-    // Force content render if needed
-    setTimeout(() => {
-        if (window.Tasks && window.Tasks.updateUI) {
-            window.Tasks.updateUI();
-        }
-        if (window.Goals && window.Goals.renderGoalsView) {
-            window.Goals.renderGoalsView();
-        }
-        if (window.CheckIn && window.CheckIn.forceUIUpdate) {
-            window.CheckIn.forceUIUpdate();
-        }
-    }, 100);
 }
 
 // Make functions globally available
@@ -2316,6 +2505,4 @@ window.forceUpdateGoalOptions = forceUpdateGoalOptions;
 window.testCompleteGoalFlow = testCompleteGoalFlow;
 window.debugDefaultGoals = debugDefaultGoals;
 window.verifyModules = verifyModules;
-window.setupMobileNavigation = setupMobileNavigation;
-window.switchToTab = switchToTab;
 </script>

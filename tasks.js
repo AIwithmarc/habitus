@@ -227,14 +227,23 @@ const Tasks = (() => {
     function setupEventListeners() {
         // Add task button
         if (elements.addTaskBtn) {
-            elements.addTaskBtn.addEventListener('click', addTask);
+            elements.addTaskBtn.addEventListener('click', () => {
+                console.log('[Tasks] Add task button clicked');
+                addTask(); // Call without parameters
+            });
         }
 
         // Task input enter key
         if (elements.taskInput) {
             elements.taskInput.addEventListener('keypress', (e) => {
                 if (e.key === 'Enter') {
-                    addTask();
+                    console.log('[Tasks] Enter key pressed on task input');
+                    // Only proceed if the input actually has content
+                    if (e.target.value && e.target.value.trim()) {
+                        addTask();
+                    } else {
+                        console.log('[Tasks] Enter pressed but input is empty, ignoring');
+                    }
                 }
             });
         }
@@ -914,10 +923,13 @@ const Tasks = (() => {
 
     // Add a new task with robust validation
     function addTask(taskData = null) {
+        console.log('[Tasks] addTask called with:', { taskData, stack: new Error().stack });
+        
         let finalTaskData;
         
         if (taskData) {
             // Called from external module (e.g., Perhaps)
+            console.log('[Tasks] Called from external module');
             finalTaskData = {
                 description: taskData.description || '',
                 role: taskData.role || '',
@@ -927,7 +939,26 @@ const Tasks = (() => {
             };
         } else {
             // Called from UI form
-            if (!elements.taskInput || !elements.goalSelect || !elements.quadrantSelect) return;
+            console.log('[Tasks] Called from UI form');
+            console.log('[Tasks] Elements status:', {
+                taskInput: !!elements.taskInput,
+                goalSelect: !!elements.goalSelect,
+                quadrantSelect: !!elements.quadrantSelect
+            });
+            
+            if (!elements.taskInput || !elements.goalSelect || !elements.quadrantSelect) {
+                console.log('[Tasks] Missing required elements, returning early');
+                return;
+            }
+
+            // Validate that we have actual values (not just empty elements)
+            if (!elements.taskInput.value.trim() || !elements.goalSelect.value || !elements.quadrantSelect.value) {
+                console.log('[Tasks] Empty values detected, showing warning');
+                if (window.App && window.App.showNotification) {
+                    window.App.showNotification('Por favor completa todos los campos requeridos', 'warning');
+                }
+                return;
+            }
 
             // Get goal to determine role
             const goal = window.Goals ? window.Goals.getGoalById(elements.goalSelect.value) : null;
@@ -939,7 +970,7 @@ const Tasks = (() => {
             }
 
             finalTaskData = {
-                description: elements.taskInput.value,
+                description: elements.taskInput.value.trim(),
                 role: goal.role, // Role is inferred from goal
                 goal: elements.goalSelect.value,
                 quadrant: elements.quadrantSelect.value,
@@ -947,6 +978,12 @@ const Tasks = (() => {
             };
         }
 
+        // Generate ID before validation
+        finalTaskData.id = window.HabitusValidator ? window.HabitusValidator.generateSecureId() : Date.now().toString(36) + Math.random().toString(36).substr(2);
+        
+        // Debug: Log the data being validated
+        console.log('Data to validate:', finalTaskData);
+        
         // Validate task data
         const validation = window.HabitusValidator ? window.HabitusValidator.validateTask(finalTaskData) : { valid: true, data: finalTaskData };
         
@@ -957,17 +994,26 @@ const Tasks = (() => {
             }
             
             // Log validation errors for debugging
-            if (window.HabitusConfig?.debug?.enabled) {
-                console.error('Task validation failed:', validation.errors);
+            console.error('Task validation failed:', validation.errors);
+            console.error('Validation details:', validation);
+            
+            // Log each error individually for better debugging
+            if (validation.errors && validation.errors.length > 0) {
+                console.error('Individual validation errors:');
+                validation.errors.forEach((error, index) => {
+                    console.error(`Error ${index + 1}:`, {
+                        field: error.field,
+                        error: error.error,
+                        value: error.value
+                    });
+                });
             }
+            
             return;
         }
 
         // Use validated and sanitized data
-        const newTask = {
-            ...validation.data,
-            id: window.HabitusValidator ? window.HabitusValidator.generateSecureId() : Date.now().toString(36) + Math.random().toString(36).substr(2)
-        };
+        const newTask = validation.data;
         
         tasks.push(newTask);
         saveData();
@@ -1040,17 +1086,17 @@ const Tasks = (() => {
     function startNewWeek() {
         // Check if check-in is required before starting new week
         if (window.CheckIn && window.CheckIn.isPending && window.CheckIn.isBlocking) {
-            window.CheckIn.showModal();
+            // Don't show modal automatically - just show notification and return
             if (window.App && window.App.showNotification) {
-                window.App.showNotification('Debes completar el check-in antes de iniciar una nueva semana', 'warning');
+                window.App.showNotification('Debes completar el check-in antes de iniciar una nueva semana. Ve a la pestaña Check-in para completarlo.', 'warning');
             }
             return;
         }
 
         // Check if action is blocked
         if (CheckIn && CheckIn.isActionBlocked('newWeek')) {
-            CheckIn.showModal();
-            App.showNotification('Completa el check-in semanal para continuar', 'warning');
+            // Don't show modal automatically - just show notification and return
+            App.showNotification('Completa el check-in semanal para continuar. Ve a la pestaña Check-in.', 'warning');
             return;
         }
 

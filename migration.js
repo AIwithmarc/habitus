@@ -251,6 +251,99 @@ const Migration = (() => {
         }
     }
 
+    // Export tasks with structured data
+    function exportTasks() {
+        try {
+            HabitusConfig?.logger?.info('Starting tasks export...');
+
+            const tasks = JSON.parse(localStorage.getItem('habitus_tasks') || '[]');
+            const goals = JSON.parse(localStorage.getItem('habitus_goals') || '[]');
+            const roles = JSON.parse(localStorage.getItem('habitus_roles') || '[]');
+
+            if (tasks.length === 0) {
+                if (App?.showNotification) {
+                    App.showNotification('No hay tareas para exportar', 'info');
+                }
+                return { success: false, error: 'No hay tareas para exportar' };
+            }
+
+            // Create structured CSV with task details
+            const csvRows = [];
+            
+            // Header row
+            csvRows.push([
+                'Tarea',
+                'Meta',
+                'Rol',
+                'Cuadrante',
+                'Estado',
+                'Fecha de Creación',
+                'Fecha de Finalización',
+                'Prioridad',
+                'Descripción'
+            ]);
+
+            // Data rows
+            tasks.forEach(task => {
+                const goal = goals.find(g => g.id === task.goal);
+                const role = roles.find(r => r === task.role);
+                
+                csvRows.push([
+                    task.description || '',
+                    goal ? goal.name : 'Sin meta',
+                    role || 'Sin rol',
+                    task.quadrant ? `Q${task.quadrant}` : '',
+                    task.completed ? 'Completada' : 'Pendiente',
+                    task.createdAt ? new Date(task.createdAt).toLocaleDateString('es-ES') : '',
+                    task.completedAt ? new Date(task.completedAt).toLocaleDateString('es-ES') : '',
+                    task.quadrant === 1 ? 'Alta' : task.quadrant === 2 ? 'Media' : 'Baja',
+                    task.description || ''
+                ]);
+            });
+
+            // Convert to CSV string
+            const csvContent = csvRows.map(row => 
+                row.map(cell => {
+                    const cellStr = String(cell || '');
+                    if (cellStr.includes(',') || cellStr.includes('"') || cellStr.includes('\n')) {
+                        return `"${cellStr.replace(/"/g, '""')}"`;
+                    }
+                    return cellStr;
+                }).join(',')
+            ).join('\n');
+
+            // Generate filename with timestamp
+            const timestamp = new Date().toISOString().split('T')[0];
+            const filename = `habitus_tareas_estructuradas_${timestamp}.csv`;
+
+            // Download file
+            downloadCSV(csvContent, filename);
+
+            // Show success notification
+            if (App?.showNotification) {
+                App.showNotification(`Tareas exportadas exitosamente: ${filename}`, 'success');
+            }
+
+            HabitusConfig?.logger?.info('Tasks export successful');
+
+            return {
+                success: true,
+                filename,
+                recordCount: tasks.length,
+                totalTasks: tasks.length,
+                completedTasks: tasks.filter(t => t.completed).length,
+                pendingTasks: tasks.filter(t => !t.completed).length
+            };
+
+        } catch (error) {
+            console.error('[Migration] Tasks export error:', error);
+            if (App?.showNotification) {
+                App.showNotification('Error al exportar tareas: ' + error.message, 'error');
+            }
+            return { success: false, error: error.message };
+        }
+    }
+
     // Parse CSV content
     function parseCSV(csvContent) {
         const lines = csvContent.split('\n');
@@ -585,6 +678,7 @@ const Migration = (() => {
     // Public API
     return {
         exportCompleteData,
+        exportTasks,
         importData,
         handleImportFile,
         
