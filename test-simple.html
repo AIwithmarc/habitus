@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Test - Tasks Views</title>
+    <link href="https://cdn.tailwindcss.com" rel="stylesheet" type="text/css">
+    <link href="styles.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100 p-4">
+    <div class="max-w-6xl mx-auto">
+        <h1 class="text-2xl font-bold text-gray-800 mb-4">Simple Test - Tasks Views</h1>
+        
+        <!-- Test Controls -->
+        <div class="bg-white p-4 rounded-lg shadow mb-4">
+            <h2 class="text-lg font-semibold mb-3">Test Controls</h2>
+            <div class="flex flex-wrap gap-4">
+                <button id="test-views-btn" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
+                    Test All Views
+                </button>
+                <button id="check-data-btn" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">
+                    Check Data
+                </button>
+                <button id="force-update-btn" class="bg-purple-500 text-white px-4 py-2 rounded hover:bg-purple-600">
+                    Force Update UI
+                </button>
+            </div>
+        </div>
+        
+        <!-- Tab Navigation -->
+        <div class="bg-white rounded-lg shadow mb-4">
+            <div class="border-b border-gray-200">
+                <nav class="flex space-x-8 px-6">
+                    <button id="tabRoles" class="tab-main py-4 px-1 border-b-2 border-transparent text-gray-600 hover:text-gray-700 hover:border-gray-300">
+                        Por Roles
+                    </button>
+                    <button id="tabGoals" class="tab-main py-4 px-1 border-b-2 border-transparent text-gray-600 hover:text-gray-700 hover:border-gray-300">
+                        Por Metas
+                    </button>
+                    <button id="tabQuadrants" class="tab-main py-4 px-1 border-b-2 border-transparent text-gray-600 hover:text-gray-700 hover:border-gray-300">
+                        Por Cuadrantes
+                    </button>
+                </nav>
+            </div>
+        </div>
+        
+        <!-- Content Views -->
+        <div class="bg-white rounded-lg shadow">
+            <!-- Roles View -->
+            <div id="rolesView" class="tab-content p-6">
+                <p class="text-gray-500">Roles view content will appear here...</p>
+            </div>
+            
+            <!-- Goals View -->
+            <div id="tasksGoalsView" class="tab-content hidden p-6">
+                <p class="text-gray-500">Goals view content will appear here...</p>
+            </div>
+            
+            <!-- Quadrants View -->
+            <div id="quadrantsView" class="tab-content hidden p-6">
+                <p class="text-gray-500">Quadrants view content will appear here...</p>
+            </div>
+        </div>
+        
+        <!-- Debug Output -->
+        <div class="bg-white p-4 rounded-lg shadow mt-4">
+            <h3 class="text-lg font-semibold mb-2">Debug Output</h3>
+            <div id="debug-output" class="text-sm text-gray-600 bg-gray-50 p-3 rounded max-h-64 overflow-y-auto">
+                Ready to test...
+            </div>
+        </div>
+    </div>
+
+    <!-- Load modules in correct order -->
+    <script src="config.js"></script>
+    <script src="validator.js"></script>
+    <script src="migration.js"></script>
+    <script src="pasajes_bilingues.js"></script>
+    <script src="translations.js"></script>
+    <script src="roles.js"></script>
+    <script src="goals.js"></script>
+    <script src="tasks.js"></script>
+    <script src="checkin.js"></script>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const debugOutput = document.getElementById('debug-output');
+            const testViewsBtn = document.getElementById('test-views-btn');
+            const checkDataBtn = document.getElementById('check-data-btn');
+            const forceUpdateBtn = document.getElementById('force-update-btn');
+            
+            function log(message) {
+                const timestamp = new Date().toLocaleTimeString();
+                debugOutput.innerHTML += `<div>[${timestamp}] ${message}</div>`;
+                debugOutput.scrollTop = debugOutput.scrollHeight;
+                console.log(message);
+            }
+            
+            // Initialize modules
+            async function initializeModules() {
+                try {
+                    log('Initializing modules...');
+                    
+                    // Initialize in sequence
+                    await window.Translations.init();
+                    log('Translations initialized');
+                    
+                    await window.Roles.init();
+                    log('Roles initialized');
+                    
+                    await window.Goals.init();
+                    log('Goals initialized');
+                    
+                    await window.Tasks.init();
+                    log('Tasks initialized');
+                    
+                    log('All modules initialized successfully');
+                    
+                    // Check what data we have
+                    checkData();
+                    
+                } catch (error) {
+                    log(`Error initializing modules: ${error.message}`);
+                    console.error('Initialization error:', error);
+                }
+            }
+            
+            // Check what data is available
+            function checkData() {
+                log('=== Checking Available Data ===');
+                
+                // Check roles
+                if (window.Roles && window.Roles.getRoles) {
+                    const roles = window.Roles.getRoles();
+                    log(`Available roles: ${roles.length} - ${JSON.stringify(roles)}`);
+                } else {
+                    log('ERROR: Roles.getRoles not available');
+                }
+                
+                // Check goals
+                if (window.Goals && window.Goals.getGoals) {
+                    const goals = window.Goals.getGoals();
+                    log(`Available goals: ${goals.length} - ${JSON.stringify(goals)}`);
+                } else {
+                    log('ERROR: Goals.getGoals not available');
+                }
+                
+                // Check tasks
+                if (window.Tasks && window.Tasks.getTasks) {
+                    const tasks = window.Tasks.getTasks();
+                    log(`Available tasks: ${tasks.length} - ${JSON.stringify(tasks)}`);
+                } else {
+                    log('ERROR: Tasks.getTasks not available');
+                }
+                
+                // Check localStorage
+                const storedRoles = localStorage.getItem('habitus_roles');
+                const storedGoals = localStorage.getItem('habitus_goals');
+                const storedTasks = localStorage.getItem('habitus_tasks');
+                
+                log(`localStorage roles: ${storedRoles ? 'exists' : 'none'}`);
+                log(`localStorage goals: ${storedGoals ? 'exists' : 'none'}`);
+                log(`localStorage tasks: ${storedTasks ? 'exists' : 'none'}`);
+                
+                log('=== End Data Check ===');
+            }
+            
+            // Test all views
+            function testAllViews() {
+                log('=== Testing All Views ===');
+                
+                // Test roles view
+                if (window.Tasks && window.Tasks.showRoles) {
+                    window.Tasks.showRoles();
+                    log('✅ Roles view activated');
+                } else {
+                    log('❌ ERROR: Tasks.showRoles not available');
+                }
+                
+                // Test goals view
+                if (window.Tasks && window.Tasks.showGoals) {
+                    window.Tasks.showGoals();
+                    log('✅ Goals view activated');
+                } else {
+                    log('❌ ERROR: Tasks.showGoals not available');
+                }
+                
+                // Test quadrants view
+                if (window.Tasks && window.Tasks.showQuadrants) {
+                    window.Tasks.showQuadrants();
+                    log('✅ Quadrants view activated');
+                } else {
+                    log('❌ ERROR: Tasks.showQuadrants not available');
+                }
+                
+                // Go back to roles view
+                if (window.Tasks && window.Tasks.showRoles) {
+                    window.Tasks.showRoles();
+                    log('✅ Back to roles view');
+                }
+                
+                log('=== End View Test ===');
+            }
+            
+            // Force update UI
+            function forceUpdateUI() {
+                log('=== Force Updating UI ===');
+                
+                if (window.Tasks && window.Tasks.updateUI) {
+                    window.Tasks.updateUI();
+                    log('✅ Tasks.updateUI called');
+                } else {
+                    log('❌ ERROR: Tasks.updateUI not available');
+                }
+                
+                log('=== End Force Update ===');
+            }
+            
+            // Event listeners
+            testViewsBtn.addEventListener('click', testAllViews);
+            checkDataBtn.addEventListener('click', checkData);
+            forceUpdateBtn.addEventListener('click', forceUpdateUI);
+            
+            // Tab navigation
+            document.querySelectorAll('.tab-main').forEach(tab => {
+                tab.addEventListener('click', function() {
+                    const tabName = this.textContent.trim();
+                    log(`Tab clicked: ${tabName}`);
+                    
+                    // Remove active state from all tabs
+                    document.querySelectorAll('.tab-main').forEach(t => {
+                        t.classList.remove('active', 'border-indigo-500', 'text-gray-700');
+                        t.classList.add('border-transparent', 'text-gray-600');
+                    });
+                    
+                    // Add active state to clicked tab
+                    this.classList.add('active', 'border-indigo-500', 'text-gray-700');
+                    this.classList.remove('border-transparent', 'text-gray-600');
+                    
+                    // Show corresponding content
+                    if (tabName === 'Por Roles') {
+                        if (window.Tasks && window.Tasks.showRoles) {
+                            window.Tasks.showRoles();
+                            log('Switched to roles view');
+                        }
+                    } else if (tabName === 'Por Metas') {
+                        if (window.Tasks && window.Tasks.showGoals) {
+                            window.Tasks.showGoals();
+                            log('Switched to goals view');
+                        }
+                    } else if (tabName === 'Por Cuadrantes') {
+                        if (window.Tasks && window.Tasks.showQuadrants) {
+                            window.Tasks.showQuadrants();
+                            log('Switched to quadrants view');
+                        }
+                    }
+                });
+            });
+            
+            // Start initialization
+            initializeModules();
+        });
+    </script>
+</body>
+</html> 

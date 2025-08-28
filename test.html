@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Tasks Module</title>
+    <link href="https://cdn.tailwindcss.com" rel="stylesheet" type="text/css">
+</head>
+<body class="bg-gray-100 p-4">
+    <div class="max-w-4xl mx-auto">
+        <h1 class="text-2xl font-bold text-gray-800 mb-4">Test Tasks Module</h1>
+        
+        <div id="test-output" class="bg-white p-4 rounded-lg shadow">
+            <p>Testing Tasks module...</p>
+        </div>
+        
+        <button id="test-btn" class="mt-4 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
+            Test Tasks Module
+        </button>
+    </div>
+
+    <!-- Load modules in correct order -->
+    <script src="config.js"></script>
+    <script src="validator.js"></script>
+    <script src="migration.js"></script>
+    <script src="pasajes_bilingues.js"></script>
+    <script src="translations.js"></script>
+    <script src="roles.js"></script>
+    <script src="goals.js"></script>
+    <script src="tasks.js"></script>
+    <script src="checkin.js"></script>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const output = document.getElementById('test-output');
+            const testBtn = document.getElementById('test-btn');
+            
+            // Test if Tasks module is available
+            function testTasksModule() {
+                output.innerHTML = '<p>Testing Tasks module...</p>';
+                
+                try {
+                    // Check if Tasks is defined
+                    if (typeof window.Tasks !== 'undefined') {
+                        output.innerHTML += '<p class="text-green-600">✅ Tasks module is defined</p>';
+                        
+                        // Check if Tasks.init exists
+                        if (typeof window.Tasks.init === 'function') {
+                            output.innerHTML += '<p class="text-green-600">✅ Tasks.init function exists</p>';
+                        } else {
+                            output.innerHTML += '<p class="text-red-600">❌ Tasks.init function not found</p>';
+                        }
+                        
+                        // Check if Tasks.addTask exists
+                        if (typeof window.Tasks.addTask === 'function') {
+                            output.innerHTML += '<p class="text-green-600">✅ Tasks.addTask function exists</p>';
+                        } else {
+                            output.innerHTML += '<p class="text-red-600">❌ Tasks.addTask function not found</p>';
+                        }
+                        
+                        // Check if Tasks.updateUI exists
+                        if (typeof window.Tasks.updateUI === 'function') {
+                            output.innerHTML += '<p class="text-green-600">✅ Tasks.updateUI function exists</p>';
+                        } else {
+                            output.innerHTML += '<p class="text-red-600">❌ Tasks.updateUI function not found</p>';
+                        }
+                        
+                        // Check if Tasks.updateGoalOptions exists
+                        if (typeof window.Tasks.updateGoalOptions === 'function') {
+                            output.innerHTML += '<p class="text-green-600">✅ Tasks.updateGoalOptions function exists</p>';
+                        } else {
+                            output.innerHTML += '<p class="text-red-600">❌ Tasks.updateGoalOptions function not found</p>';
+                        }
+                        
+                    } else {
+                        output.innerHTML += '<p class="text-red-600">❌ Tasks module is not defined</p>';
+                    }
+                    
+                    // Check other modules
+                    if (typeof window.Goals !== 'undefined') {
+                        output.innerHTML += '<p class="text-green-600">✅ Goals module is defined</p>';
+                    } else {
+                        output.innerHTML += '<p class="text-red-600">❌ Goals module is not defined</p>';
+                    }
+                    
+                    if (typeof window.Roles !== 'undefined') {
+                        output.innerHTML += '<p class="text-green-600">✅ Roles module is defined</p>';
+                    } else {
+                        output.innerHTML += '<p class="text-red-600">❌ Roles module is not defined</p>';
+                    }
+                    
+                    if (typeof window.Translations !== 'undefined') {
+                        output.innerHTML += '<p class="text-green-600">✅ Translations module is defined</p>';
+                    } else {
+                        output.innerHTML += '<p class="text-red-600">❌ Translations module is not defined</p>';
+                    }
+                    
+                } catch (error) {
+                    output.innerHTML += `<p class="text-red-600">❌ Error testing modules: ${error.message}</p>`;
+                    console.error('Test error:', error);
+                }
+            }
+            
+            // Run test when button is clicked
+            testBtn.addEventListener('click', testTasksModule);
+            
+            // Run test automatically
+            setTimeout(testTasksModule, 1000);
+        });
+    </script>
+</body>
+</html> 

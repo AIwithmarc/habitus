@@ -1,0 +1,2209 @@
+<!DOCTYPE html>
+
+<html lang="es">
+<head>
+<!-- Etiquetas Open Graph para redes sociales -->
+<meta content="Habitus - Planificador Semanal" property="og:title"/>
+<meta content="Organiza tu semana con claridad y propósito con Habitus." property="og:description"/>
+<meta content="https://mvallhonrat.github.io/HabitusWeeklyPlannerApp/icons/icon-514x5154.png" property="og:image"/>
+<meta content="website" property="og:type"/>
+<meta content="https://mvallhonrat.github.io/HabitusWeeklyPlannerApp/" property="og:url"/>
+<!-- Etiquetas Twitter Card -->
+<meta content="summary_large_image" name="twitter:card"/>
+<meta content="Habitus - Planificador Semanal" name="twitter:title"/>
+<meta content="Organiza tu semana con claridad y propósito con Habitus." name="twitter:description"/>
+<meta content="https://mvallhonrat.github.io/HabitusWeeklyPlannerApp/icons/icon-514x5154.png" name="twitter:image"/>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport"/>
+<meta content="#4f46e5" name="theme-color"/>
+<meta content="Planificador Semanal basado en la Matriz de Prioridades" name="description"/>
+<meta content="yes" name="apple-mobile-web-app-capable"/>
+<meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"/>
+<title data-i18n="title">Habitus - Planificador Semanal</title>
+<!-- Cargar Tailwind CSS desde CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3"></script>
+<link href="manifest.json" rel="manifest"/>
+<link href="icons/icon-192x192.png" rel="apple-touch-icon"/>
+<style>
+    /* Optimizaciones para móvil */
+    @media (max-width: 640px) {
+      .text-2xl {
+        font-size: 1.5rem;
+      }
+      .text-xl {
+        font-size: 1.25rem;
+      }
+      .p-4 {
+        padding: 0.75rem;
+      }
+      /* Aumentar tamaño de elementos interactivos para móvil */
+      button, input[type="text"], select, textarea {
+        min-height: 44px;
+      }
+      /* Aumentar espaciado entre elementos */
+      .space-y-1 > * + * {
+        margin-top: 0.5rem;
+      }
+    }
+
+    /* Mejorar rendimiento táctil */
+    .touch-manipulation {
+      touch-action: manipulation;
+    }
+
+    /* Prevenir selección de texto en elementos interactivos */
+    .no-select {
+      user-select: none;
+    }
+
+    /* Estilos para modo standalone en iOS */
+    @supports (-webkit-touch-callout: none) {
+      .ios-standalone {
+        padding-top: env(safe-area-inset-top);
+        padding-bottom: env(safe-area-inset-bottom);
+      }
+    }
+
+    /* Language switch styles */
+    .lang-switch {
+        position: relative;
+        display: inline-block;
+        width: 100px;
+        height: 32px;
+        background-color: #e5e7eb;
+        border-radius: 16px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .lang-switch::before {
+        content: '';
+        position: absolute;
+        width: 48px;
+        height: 24px;
+        border-radius: 12px;
+        background-color: white;
+        top: 4px;
+        left: 4px;
+        transition: all 0.3s ease;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    .lang-switch.active::before {
+        transform: translateX(44px);
+    }
+
+    .lang-switch-text {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: 12px;
+        font-weight: 600;
+        color: #4b5563;
+        transition: all 0.3s ease;
+    }
+
+    .lang-switch-text.es {
+        left: 12px;
+    }
+
+    .lang-switch-text.en {
+        right: 12px;
+    }
+
+    .lang-switch.active .lang-switch-text.es {
+        color: #4b5563;
+    }
+
+    .lang-switch.active .lang-switch-text.en {
+        color: white;
+    }
+
+    .lang-switch:not(.active) .lang-switch-text.es {
+        color: white;
+    }
+
+    .lang-switch:not(.active) .lang-switch-text.en {
+        color: #4b5563;
+    }
+
+    /* Feedback bubble styles */
+    #feedbackBubble {
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        transition: all 0.2s ease-in-out;
+    }
+
+    #feedbackBubble:hover {
+        transform: scale(1.1);
+    }
+
+    #feedbackBubble:active {
+        transform: scale(0.95);
+    }
+
+    /* Ensure modal is above the bubble */
+    #feedbackModal {
+        z-index: 50;
+    }
+
+    /* Add safe area padding for iOS devices */
+    @supports (padding: max(0px)) {
+        #feedbackBubble {
+            bottom: max(1.5rem, env(safe-area-inset-bottom) + 1rem);
+            right: max(1.5rem, env(safe-area-inset-right) + 1rem);
+        }
+    }
+</style>
+<link rel="stylesheet" href="styles.css">
+<link href="./icons/icon-192x192.png" rel="icon" type="image/png"/></head>
+<body class="bg-gray-50 text-gray-800 p-4 antialiased ios-standalone">
+
+
+<!-- Modern gradient header -->
+<div class="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-xl shadow-lg p-4 sm:p-6 mb-6">
+    <div class="flex flex-col sm:flex-row items-center justify-center space-y-3 sm:space-y-0 sm:space-x-6">
+        <!-- Logo container with larger white background and smaller image -->
+        <div class="bg-white rounded-full p-4 sm:p-5 shadow-md">
+            <img alt="Logo Habitus" 
+                 class="w-16 h-16 sm:w-20 sm:h-20 object-contain" 
+                 src="icons/icon-192x192.png"
+                 srcset="icons/icon-192x192.png 1x, icons/icon-512x512.png 2x"/>
+        </div>
+        <!-- Text container with responsive typography and fixed width -->
+        <div class="text-center sm:text-left w-full sm:w-[500px]">
+            <h1 class="text-xl sm:text-3xl font-bold text-white mb-1" data-i18n="title">
+                <span class="whitespace-nowrap">Habitus</span>
+                <span class="block sm:inline text-lg sm:text-2xl">Planificador Semanal</span>
+            </h1>
+            <p class="text-indigo-100 text-sm sm:text-base italic break-words" id="randomVerse" style="min-height: 2.5em;">Planificador Semanal</p>
+        </div>
+    </div>
+</div>
+
+<!-- Add script to show random verse -->
+<script>
+function showRandomVerse() {
+    const verses = window.PASAJES_BILINGUES.es;
+    const randomVerse = verses[Math.floor(Math.random() * verses.length)];
+    const verseElement = document.getElementById('randomVerse');
+    verseElement.innerHTML = `${randomVerse.contenido} <span class="text-xs block sm:inline">(${randomVerse.pasaje})</span>`;
+}
+
+// Show random verse when page loads
+document.addEventListener('DOMContentLoaded', showRandomVerse);
+</script>
+
+<!-- Recuadro de instrucciones - Colapsable en móvil -->
+<div class="bg-blue-100 border-l-4 border-blue-500 text-blue-900 p-3 mb-4 rounded">
+<div class="flex items-center cursor-pointer gap-2" onclick="toggleInstructions()">
+<button class="text-blue-700 hover:text-blue-900" id="instructionsToggle">▶</button>
+<h3 class="font-medium no-select" data-i18n="instructions_title">📖 Instrucciones de uso</h3>
+</div>
+<div class="mt-2 hidden" id="instructionsContent">
+<ul class="list-disc list-inside text-sm space-y-2">
+<li data-i18n="inst_1">🎭 <strong>Paso 1 - Define tus Roles:</strong> Identifica los roles importantes en tu vida (por ejemplo: Padre, Profesional, Amigo). Estos serán las categorías bajo las cuales organizarás tus tareas semanales.</li>
+<li data-i18n="inst_2">🎯 <strong>Paso 2 - Crea tus Metas:</strong> Para cada rol, define metas específicas que quieres alcanzar. Cada rol tendrá automáticamente una meta por defecto llamada 'Otras Prioridades'.</li>
+<li data-i18n="inst_2_1">📝 <strong>Paso 3 - Agrega tus Tareas:</strong> Para cada meta, añade las tareas que deseas realizar esta semana. Escribe una breve descripción y asigna el cuadrante correspondiente según su urgencia e importancia.</li>
+<li data-i18n="inst_3">🔢 Prioriza con los Cuadrantes: Utiliza la Matriz de Prioridades (I-IV) para clasificar cada tarea:</li>
+<div class="ml-6 mt-1 text-sm" data-i18n="inst_3_sub">
+    <ul class="list-none ml-4 mt-1">
+        <li data-i18n="inst_4">I – Urgente e Importante (hacer de inmediato).</li>
+        <li data-i18n="inst_5">II – No Urgente e Importante (planificar tiempo para hacer).</li>
+        <li data-i18n="inst_6">III – Urgente y No Importante (intentar delegar o minimizar).</li>
+        <li data-i18n="inst_7">IV – No Urgente y No Importante (evitar en lo posible).</li>
+    </ul>
+</div>
+<li data-i18n="inst_8">✅ <strong>Marca las Completadas:</strong> A medida que termines cada tarea, márcala como realizada con la casilla de verificación.</li>
+<li data-i18n="inst_9">🔄 <strong>Vista de Roles/Cuadrantes:</strong> Alterna entre la vista agrupada por roles o por cuadrantes usando las pestañas para obtener diferentes perspectivas de tus tareas.</li>
+<li data-i18n="inst_10">📊 <strong>Revisa tus Métricas:</strong> Al finalizar la semana, revisa el resumen de tareas completadas y pendientes, y reflexiona sobre tu semana en Revisión Semanal.</li>
+<li data-i18n="inst_11">📋 <strong>Exporta y Reinicia:</strong> Guarda un registro de tu semana utilizando Exportar Métricas y Exportar Tareas. Luego comienza una nueva semana con el botón Nueva Semana: solo las tareas completadas se removerán, las pendientes permanecerán para la siguiente semana.</li>
+</ul>
+</div>
+</div>
+<!-- Sistema de Pestañas Principales -->
+<div class="mb-6">
+    <!-- Pestañas Principales -->
+    <div class="bg-white rounded-lg shadow-sm p-4 mb-6">
+        <h2 class="text-lg font-semibold text-gray-800 mb-4 text-center">🎯 Planificador Habitus</h2>
+        <div class="flex border-b border-gray-300 mb-4">
+            <button class="tab-main active px-6 py-3 text-sm font-medium text-gray-700 border-b-2 border-indigo-500 touch-manipulation" data-tab="roles">
+                🎭 Roles
+            </button>
+            <button class="tab-main px-6 py-3 text-sm font-medium text-gray-600 hover:text-gray-800 border-b-2 border-transparent touch-manipulation" data-tab="goals">
+                🎯 Metas
+            </button>
+            <button class="tab-main px-6 py-3 text-sm font-medium text-gray-600 hover:text-gray-800 border-b-2 border-transparent touch-manipulation" data-tab="tasks">
+                📝 Tareas
+            </button>
+            <button class="tab-main px-6 py-3 text-sm font-medium text-gray-600 hover:text-gray-800 border-b-2 border-transparent touch-manipulation" data-tab="checkin">
+                ✅ Check-in
+            </button>
+            <button class="tab-main px-6 py-3 text-sm font-medium text-gray-600 hover:text-gray-800 border-b-2 border-transparent touch-manipulation" data-tab="perhaps">
+                💡 Perhaps List
+            </button>
+        </div>
+        
+        <!-- Debug buttons -->
+        <div class="text-center mt-2 space-x-2 hidden" id="debugButtons">
+            <button onclick="testTabNavigation()" class="bg-gray-500 text-white px-3 py-1 rounded text-xs hover:bg-gray-600">
+                🐛 Test Tabs
+            </button>
+            <button onclick="forceTabSetup()" class="bg-blue-500 text-white px-3 py-1 rounded text-xs hover:bg-blue-600">
+                🔧 Force Setup
+            </button>
+            <button onclick="testTabClick('goals')" class="bg-green-500 text-white px-3 py-1 rounded text-xs hover:bg-green-600">
+                🎯 Test Metas
+            </button>
+            <button onclick="testGoalsModule()" class="bg-purple-500 text-white px-3 py-1 rounded text-xs hover:bg-purple-600">
+                🎯 Test Goals
+            </button>
+            <button onclick="testTasksModule()" class="bg-orange-500 text-white px-3 py-1 rounded text-xs hover:bg-orange-600">
+                📝 Test Tasks
+            </button>
+            <button onclick="forceRenderAll()" class="bg-red-500 text-white px-3 py-1 rounded text-xs hover:bg-red-600">
+                🚀 Force Render
+            </button>
+            <button onclick="fixTabState()" class="bg-yellow-500 text-white px-3 py-1 rounded text-xs hover:bg-yellow-600">
+                🔧 Fix Tabs
+            </button>
+            <button onclick="diagnoseTabContent()" class="bg-indigo-500 text-white px-3 py-1 rounded text-xs hover:bg-indigo-600">
+                🔍 Diagnose
+            </button>
+            <button onclick="forceTabContent('goals')" class="bg-purple-500 text-white px-3 py-1 rounded text-xs hover:bg-purple-600">
+                🎯 Force Metas
+            </button>
+            <button onclick="restoreAllTabContent()" class="bg-teal-500 text-white px-3 py-1 rounded text-xs hover:bg-teal-600">
+                🔄 Restore All
+            </button>
+            <button onclick="testSimpleNavigation()" class="bg-orange-500 text-white px-3 py-1 rounded text-xs hover:bg-orange-600">
+                🧪 Test Nav
+            </button>
+            <button onclick="testGoalOptions()" class="bg-pink-500 text-white px-3 py-1 rounded text-xs hover:bg-pink-600">
+                🎯 Test Goals
+            </button>
+            <button onclick="forceUpdateGoalOptions()" class="bg-indigo-500 text-white px-3 py-1 rounded text-xs hover:bg-indigo-600">
+                🔄 Force Goals
+            </button>
+            <button onclick="testCompleteGoalFlow()" class="bg-yellow-500 text-white px-3 py-1 rounded text-xs hover:bg-yellow-600">
+                🧪 Test Flow
+            </button>
+            <button onclick="debugDefaultGoals()" class="bg-red-500 text-white px-3 py-1 rounded text-xs hover:bg-red-600">
+                🔴 Debug Defaults
+            </button>
+            <button onclick="verifyModules()" class="bg-green-500 text-white px-3 py-1 rounded text-xs hover:bg-green-600">
+                ✅ Verify Modules
+            </button>
+        </div>
+    </div>
+
+    <!-- Pestaña: Roles -->
+    <div class="tab-content active" data-tab="roles">
+        <h2 class="text-xl font-semibold mb-2 no-select" data-i18n="roles">🎭 Gestión de Roles</h2>
+        <p class="text-sm text-gray-600 mb-3">Define y gestiona los roles importantes en tu vida (Padre, Profesional, Amigo, etc.)</p>
+        <div class="flex gap-2">
+            <input class="border rounded px-3 py-2 flex-1 touch-manipulation" data-i18n-placeholder="placeholder_role" id="roleInput" placeholder="Nuevo rol..." type="text"/>
+            <button class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 active:bg-blue-700 touch-manipulation" data-i18n="add_role" id="addRoleBtn">
+                ➕ Añadir Rol
+            </button>
+        </div>
+        <div class="mt-2 space-y-1" id="rolesList"><!-- Lista de roles dinámicos --></div>
+    </div>
+
+    <!-- Pestaña: Metas -->
+    <div class="tab-content hidden" data-tab="goals">
+        <h2 class="text-xl font-semibold mb-2 no-select">🎯 Gestión de Metas</h2>
+        <p class="text-sm text-gray-600 mb-3">Crea y gestiona metas específicas para cada rol. Cada rol tiene una meta por defecto "Otras Prioridades".</p>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-3">
+            <select class="border rounded px-3 py-2 touch-manipulation" id="goalRoleSelect">
+                <option value="" disabled selected>Seleccionar Rol</option>
+            </select>
+            <input class="border rounded px-3 py-2 flex-1 touch-manipulation" id="goalInput" placeholder="Nombre de la meta..." type="text"/>
+        </div>
+        <button class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 active:bg-green-700 touch-manipulation w-full sm:w-auto" id="addGoalBtn">
+            ➕ Crear Meta
+        </button>
+        <div class="mt-4" id="goalsView"><!-- Lista de metas dinámicos --></div>
+    </div>
+
+    <!-- Pestaña: Tareas -->
+    <div class="tab-content hidden" data-tab="tasks">
+        <h2 class="text-xl font-semibold mb-2 no-select">📝 Gestión de Tareas</h2>
+        <p class="text-sm text-gray-600 mb-3">Crea tareas asociadas a metas específicas y asígnales prioridad según la Matriz de Eisenhower.</p>
+<!-- Controles: pestañas y formulario -->
+<div class="mb-4">
+<!-- Pestañas de Vistas de Tareas -->
+<div class="flex border-b border-gray-300 mb-3 no-select">
+<button class="flex-1 px-3 py-3 text-sm font-medium text-gray-700 border-b-2 border-indigo-500 touch-manipulation" data-i18n="tabs_roles" id="tabRoles">Por Roles</button>
+<button class="flex-1 px-3 py-3 text-sm font-medium text-gray-600 hover:text-gray-800 border-b-2 border-transparent touch-manipulation" id="tabGoals">Por Metas</button>
+<button class="flex-1 px-3 py-3 text-sm font-medium text-gray-600 hover:text-gray-800 border-b-2 border-transparent touch-manipulation" data-i18n="tabs_quadrants" id="tabQuadrants">Por Cuadrantes</button>
+</div>
+<!-- Recordatorio de la última revisión -->
+<div class="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-900 p-3 mb-4 text-sm italic hidden" id="lastReviewBox">
+      📌 <strong>Recuerda esto de la semana anterior:</strong> <span id="lastReviewText"></span>
+</div>
+<!-- Formulario de nueva tarea -->
+<div class="mb-2">
+<label class="block text-sm font-medium mb-1" data-i18n="label_task" for="taskInput">Nueva Tarea:</label>
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
+<input class="border rounded px-3 py-2 text-sm w-full touch-manipulation" data-i18n-placeholder="placeholder_task" id="taskInput" placeholder="Descripción de la tarea" type="text"/>
+<select class="border rounded px-3 py-2 text-sm w-full touch-manipulation" id="goalSelect">
+<option disabled="" selected="" value="">Meta</option>
+</select>
+<select class="border rounded px-3 py-2 text-sm w-full touch-manipulation" id="quadrantSelect">
+<option disabled="" selected="" value="">Cuadrante</option>
+<option value="1">I - Urgente/Importante</option>
+<option value="2">II - No Urgente/Importante</option>
+<option value="3">III - Urgente/No Importante</option>
+<option value="4">IV - No Urgente/No Importante</option>
+</select>
+<button class="bg-green-500 text-white text-sm px-3 py-2 rounded hover:bg-green-600 active:bg-green-700 w-full touch-manipulation" data-i18n="add_task_button" id="addTaskBtn">
+          ✔️ Añadir Tarea
+        </button>
+</div>
+</div>
+</div>
+<!-- Vistas de tareas -->
+<div class="mb-6 overflow-x-hidden" id="rolesView"></div>
+<div class="mb-6 hidden overflow-x-hidden" id="tasksGoalsView"></div>
+<div class="mb-6 hidden overflow-x-hidden" id="quadrantsView"></div>
+</div>
+<!-- Panel de Productividad - Compacto y Valioso -->
+<div class="mb-6 bg-white p-4 rounded-lg shadow-sm">
+<h2 class="text-lg font-semibold mb-4 flex items-center">
+    <span class="mr-2">🎯</span>
+    Panel de Productividad
+</h2>
+
+<!-- Vista rápida de estado actual -->
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
+    <div class="bg-blue-50 p-3 rounded-lg text-center">
+        <div class="text-xl font-bold text-blue-600" id="totalTasks">0</div>
+        <div class="text-xs text-blue-700">Tareas</div>
+    </div>
+    <div class="bg-green-50 p-3 rounded-lg text-center">
+        <div class="text-xl font-bold text-green-600" id="completionPercentage">0%</div>
+        <div class="text-xs text-green-700">Completado</div>
+    </div>
+    <div class="bg-purple-50 p-3 rounded-lg text-center">
+        <div class="text-xl font-bold text-purple-600" id="activeRoles">0</div>
+        <div class="text-xs text-purple-700">Roles</div>
+    </div>
+    <div class="bg-orange-50 p-3 rounded-lg text-center">
+        <div class="text-xl font-bold text-orange-600" id="focusQuadrant">Q2</div>
+        <div class="text-xs text-orange-700">Enfoque</div>
+    </div>
+</div>
+
+<!-- Matrix de Eisenhower - Compacta -->
+<div class="bg-gray-50 p-3 rounded-lg mb-4">
+    <h3 class="text-sm font-medium text-gray-700 mb-2 text-center">📊 Distribución Eisenhower</h3>
+    <div class="grid grid-cols-2 gap-2">
+        <div class="bg-red-100 p-2 rounded text-center">
+            <div class="text-lg font-bold text-red-600" id="q1Count">0</div>
+            <div class="text-xs text-red-700">Crisis (Q1)</div>
+        </div>
+        <div class="bg-blue-100 p-2 rounded text-center">
+            <div class="text-lg font-bold text-blue-600" id="q2Count">0</div>
+            <div class="text-xs text-blue-700">Importante (Q2)</div>
+        </div>
+        <div class="bg-yellow-100 p-2 rounded text-center">
+            <div class="text-lg font-bold text-yellow-600" id="q3Count">0</div>
+            <div class="text-xs text-yellow-700">Urgente (Q3)</div>
+        </div>
+        <div class="bg-gray-100 p-2 rounded text-center">
+            <div class="text-lg font-bold text-gray-600" id="q4Count">0</div>
+            <div class="text-xs text-gray-700">Pérdidas (Q4)</div>
+        </div>
+    </div>
+</div>
+
+<!-- Insights dinámicos -->
+<div id="productivityInsights" class="bg-gradient-to-r from-indigo-50 to-purple-50 p-3 rounded-lg">
+    <h3 class="text-sm font-medium text-indigo-800 mb-2 flex items-center">
+        <span class="mr-1">🧠</span>
+        Insights de Productividad
+    </h3>
+    <div class="text-xs text-indigo-700">Analizando patrones...</div>
+</div>
+</div>
+<!-- Pestaña: Check-in -->
+<div class="tab-content hidden" data-tab="checkin">
+    <h2 class="text-xl font-semibold mb-2 no-select">✅ Check-in Semanal</h2>
+    <p class="text-sm text-gray-600 mb-3">Reflexiona sobre tu semana y planifica la siguiente. Este paso es obligatorio cuando ha pasado una semana.</p>
+    
+    <!-- Formulario de check-in -->
+    <div class="mb-4">
+        <div class="bg-indigo-50 border border-indigo-200 rounded-lg p-4">
+            <h3 class="font-semibold text-indigo-800 flex items-center mb-2">
+                <span class="mr-2">🎯</span>
+                <span data-i18n="checkin_section_title">Check-in Semanal</span>
+            </h3>
+            
+            <button class="bg-indigo-500 text-white text-sm font-medium px-4 py-3 rounded w-full hover:bg-indigo-600 active:bg-indigo-700 touch-manipulation" id="checkInBtn">
+                🔄 Cargando...
+            </button>
+        </div>
+    </div>
+    
+    </div>
+</div>
+
+<!-- Pestaña: Perhaps List -->
+<div class="tab-content hidden" data-tab="perhaps">
+    <h2 class="text-xl font-semibold mb-2 no-select">💡 Perhaps List</h2>
+    <p class="text-sm text-gray-600 mb-3">Captura ideas que podrías incluir en tu planificación. No las pierdas de vista.</p>
+    
+    <!-- Formulario para agregar ideas -->
+    <div class="mb-4">
+        <div class="bg-purple-50 border border-purple-200 rounded-lg p-4">
+            <h3 class="font-semibold text-purple-800 flex items-center mb-3">
+                <span class="mr-2">✨</span>
+                <span>Nueva Idea</span>
+            </h3>
+            <div class="flex gap-2">
+                <input class="border rounded px-3 py-2 flex-1 touch-manipulation" 
+                       id="ideaInput" 
+                       placeholder="Describe tu idea..." 
+                       type="text"/>
+                <button class="bg-purple-500 text-white px-4 py-2 rounded hover:bg-purple-600 active:bg-purple-700 touch-manipulation" 
+                        id="addIdeaBtn">
+                    ➕ Agregar
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Buscador de ideas -->
+    <div class="mb-4">
+        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <h3 class="font-semibold text-blue-800 flex items-center mb-3">
+                <span class="mr-2">🔍</span>
+                <span>Buscar Ideas</span>
+            </h3>
+            <input class="border rounded px-3 py-2 w-full touch-manipulation" 
+                   id="searchIdeasInput" 
+                   placeholder="Buscar en tus ideas..." 
+                   type="text"/>
+        </div>
+    </div>
+    
+    <!-- Lista de ideas -->
+    <div class="mb-4">
+        <div class="bg-white border border-gray-200 rounded-lg p-4">
+            <h3 class="font-semibold text-gray-800 flex items-center justify-between mb-3">
+                <span class="flex items-center">
+                    <span class="mr-2">📝</span>
+                    <span>Mis Ideas</span>
+                </span>
+                <div class="flex items-center space-x-4">
+                    <div class="text-sm text-gray-500">
+                        <span id="ideasCount">0</span> ideas
+                    </div>
+                    <div class="flex space-x-2">
+                        <button onclick="Perhaps.toggleImplementedView()" 
+                                id="toggleImplementedBtn"
+                                class="bg-green-200 text-green-700 px-3 py-1 rounded text-xs hover:bg-green-300 active:bg-green-400 touch-manipulation">
+                            ✅ Ver Implementadas
+                        </button>
+                        <button onclick="Perhaps.toggleArchivedView()" 
+                                id="toggleArchivedBtn"
+                                class="bg-gray-200 text-gray-700 px-3 py-1 rounded text-xs hover:bg-gray-300 active:bg-gray-400 touch-manipulation">
+                            📁 Ver Archivadas
+                        </button>
+                    </div>
+                </div>
+            </h3>
+            <div id="ideasList" class="space-y-3">
+                <!-- Las ideas se renderizarán dinámicamente aquí -->
+            </div>
+        </div>
+    </div>
+    
+    <!-- Botones de Debug para Perhaps List -->
+    <div class="mb-4">
+        <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+            <h3 class="font-semibold text-yellow-800 flex items-center mb-3">
+                <span class="mr-2">🐛</span>
+                <span>Debug Perhaps List</span>
+            </h3>
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                <button onclick="PerhapsDebug.testAddIdea()" 
+                        class="bg-blue-500 text-white px-3 py-2 rounded text-xs hover:bg-blue-600 active:bg-blue-700 touch-manipulation">
+                    ➕ Test Idea
+                </button>
+                <button onclick="PerhapsDebug.testConvertToGoal()" 
+                        class="bg-green-500 text-white px-3 py-2 rounded text-xs hover:bg-green-600 active:bg-green-700 touch-manipulation">
+                    🎯 Test Meta
+                </button>
+                <button onclick="PerhapsDebug.testConvertToTask()" 
+                        class="bg-purple-500 text-white px-3 py-2 rounded text-xs hover:bg-purple-600 active:bg-purple-700 touch-manipulation">
+                    📝 Test Tarea
+                </button>
+                <button onclick="PerhapsDebug.testArchiveIdea()" 
+                        class="bg-gray-500 text-white px-3 py-2 rounded text-xs hover:bg-gray-600 active:bg-gray-700 touch-manipulation">
+                    📁 Test Archivar
+                </button>
+                <button onclick="PerhapsDebug.showIdeasData()" 
+                        class="bg-indigo-500 text-white px-3 py-2 rounded text-xs hover:bg-indigo-600 active:bg-indigo-700 touch-manipulation">
+                    📊 Ver Datos
+                </button>
+                <button onclick="PerhapsDebug.clearAllIdeas()" 
+                        class="bg-red-500 text-white px-3 py-2 rounded text-xs hover:bg-red-600 active:bg-red-700 touch-manipulation">
+                    🗑️ Limpiar
+                </button>
+                <button onclick="PerhapsDebug.testModules()" 
+                        class="bg-orange-500 text-white px-3 py-2 rounded text-xs hover:bg-orange-600 active:bg-orange-700 touch-manipulation">
+                    🔧 Test Módulos
+                </button>
+                <button onclick="PerhapsDebug.forceRender()" 
+                        class="bg-teal-500 text-white px-3 py-2 rounded text-xs hover:bg-teal-600 active:bg-teal-700 touch-manipulation">
+                    🚀 Forzar Render
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Información adicional del check-in -->
+<div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+    <h3 class="font-semibold text-blue-800 flex items-center mb-2">
+        <span class="mr-2">📊</span>
+        <span>Información del Check-in</span>
+    </h3>
+    <p class="text-sm text-blue-600 mb-2">
+        El check-in semanal te permite reflexionar sobre tus logros, desafíos y aprendizajes de la semana anterior.
+    </p>
+    <ul class="text-sm text-blue-700 space-y-1">
+        <li>• <strong>Obligatorio:</strong> Se requiere cada semana para mantener la continuidad</li>
+        <li>• <strong>Reflexión:</strong> Evalúa tu productividad y planifica mejoras</li>
+        <li>• <strong>Nueva Semana:</strong> Solo las tareas completadas se remueven</li>
+    </ul>
+</div>
+
+<!-- Botones de migración de datos -->
+<div class="mb-6">
+<h3 class="text-lg font-semibold mb-3 flex items-center">
+    <span class="mr-2">💾</span>
+    <span data-i18n="migration_title">Migración de Datos</span>
+</h3>
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+    <button id="exportCompleteBtn" class="bg-blue-500 text-white text-sm px-4 py-3 rounded hover:bg-blue-600 active:bg-blue-700 touch-manipulation flex items-center justify-center">
+        <span class="mr-2">📤</span>
+        <span data-i18n="export_complete">Exportar Datos Completos</span>
+    </button>
+    <button id="importDataBtn" class="bg-green-500 text-white text-sm px-4 py-3 rounded hover:bg-green-600 active:bg-green-700 touch-manipulation flex items-center justify-center">
+        <span class="mr-2">📥</span>
+        <span data-i18n="import_data">Importar Datos</span>
+    </button>
+</div>
+<p class="text-xs text-gray-500 mt-2" data-i18n="migration_description">
+    Exporta todos tus datos para migrar a otro dispositivo o crear un respaldo completo.
+</p>
+</div>
+
+<!-- Add floating feedback button -->
+<button id="feedbackBubble" 
+        class="fixed bottom-6 right-6 w-14 h-14 bg-indigo-500 text-white rounded-full shadow-lg hover:bg-indigo-600 active:bg-indigo-700 flex items-center justify-center text-2xl transition-transform hover:scale-110 touch-manipulation z-40"
+        onclick="App.showFeedbackModal()"
+        data-i18n-title="feedback_title"
+        title="Enviar Feedback">
+    💬
+</button>
+
+<!-- Keep the existing modal code -->
+<div id="feedbackModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50">
+    <div class="bg-white rounded-lg p-6 m-4 max-w-lg w-full">
+        <h3 class="text-lg font-semibold mb-4" data-i18n="feedback_title">Enviar Feedback</h3>
+        <textarea id="feedbackInput" 
+                  class="w-full border rounded px-3 py-2 text-sm mb-4" 
+                  rows="4" 
+                  data-i18n-placeholder="feedback_placeholder"
+                  placeholder="Escribe aquí tus sugerencias, mejoras o reporta algún error..."></textarea>
+        <div class="flex justify-end gap-2">
+            <button class="bg-gray-300 text-gray-800 px-4 py-2 rounded hover:bg-gray-400" 
+                    onclick="App.hideFeedbackModal()" 
+                    data-i18n="cancel">Cancelar</button>
+            <button class="bg-indigo-500 text-white px-4 py-2 rounded hover:bg-indigo-600" 
+                    onclick="App.sendFeedback()" 
+                    data-i18n="send">Enviar</button>
+        </div>
+    </div>
+</div>
+
+
+<!-- Load scripts in correct order -->
+<script>
+// Smart CDN loading with fallbacks
+(function() {
+    const scripts = [
+        {
+            cdn: 'https://cdn.tailwindcss.com',
+            fallback: 'vendor/tailwind.min.css',
+            type: 'css'
+        },
+        {
+            cdn: 'https://cdn.jsdelivr.net/npm/chart.js@3',
+            fallback: 'vendor/chart.min.js',
+            type: 'js'
+        }
+    ];
+
+    scripts.forEach(script => {
+        if (script.type === 'css') {
+            const link = document.createElement('link');
+            link.rel = 'stylesheet';
+            link.href = script.cdn;
+            link.onerror = () => {
+                link.href = script.fallback;
+                console.log('Loading fallback CSS:', script.fallback);
+            };
+            document.head.appendChild(link);
+        } else {
+            const scriptEl = document.createElement('script');
+            scriptEl.src = script.cdn;
+            scriptEl.onerror = () => {
+                const fallbackScript = document.createElement('script');
+                fallbackScript.src = script.fallback;
+                document.head.appendChild(fallbackScript);
+                console.log('Loading fallback JS:', script.fallback);
+            };
+            document.head.appendChild(scriptEl);
+        }
+    });
+})();
+</script>
+
+<!-- Core application modules -->
+    <script src="config.js"></script>
+    <script src="validator.js"></script>
+    <script src="migration.js"></script>
+    <script src="pasajes_bilingues.js"></script>
+    <script src="translations.js"></script>
+    <script src="roles.js"></script>
+    <script src="goals.js"></script>
+    <script src="tasks.js"></script>
+    <script src="checkin.js"></script>
+    <script src="perhaps.js"></script>
+    <script src="app.js"></script>
+
+<script>
+// Global error handler
+window.onerror = function(msg, url, lineNo, columnNo, error) {
+    console.error('Global error:', { msg, url, lineNo, columnNo, error });
+    return false;
+};
+
+// Load JSON data
+async function loadJSONData(url) {
+    try {
+        console.log(`Loading data from ${url}...`);
+        const response = await fetch(url);
+        if (!response.ok) {
+            throw new Error(`Failed to load ${url}: ${response.status} ${response.statusText}`);
+        }
+        const data = await response.json();
+        console.log(`Successfully loaded ${url}`);
+        return data;
+    } catch (error) {
+        console.error(`Error loading ${url}:`, error);
+        throw error;
+    }
+}
+
+// Initialize application
+async function initApp() {
+    try {
+        console.log('Starting application initialization...');
+        
+        // Initialize App module
+        await App.init();
+        
+        // Set up migration buttons
+        document.getElementById('exportCompleteBtn')?.addEventListener('click', Migration.exportCompleteData);
+        document.getElementById('importDataBtn')?.addEventListener('click', Migration.handleImportFile);
+        
+        // Migrate existing tasks to include goals if needed
+        if (Migration && Migration.migrateTasksToGoals) {
+            try {
+                const migratedCount = Migration.migrateTasksToGoals();
+                if (migratedCount > 0) {
+                    console.log(`[App] Migrated ${migratedCount} tasks to include goals`);
+                }
+            } catch (error) {
+                console.error('[App] Error during tasks migration:', error);
+            }
+        }
+        
+
+        
+        // Force CheckIn UI update after all modules are loaded
+        console.log('🔄 Forcing CheckIn UI update after module initialization...');
+        if (CheckIn && CheckIn.forceUIUpdate) {
+            CheckIn.forceUIUpdate();
+        }
+        
+        // Additional direct calls to ensure UI is correct
+        setTimeout(() => {
+            if (CheckIn && CheckIn.forceUIUpdate) {
+                CheckIn.forceUIUpdate();
+                console.log('✅ Final CheckIn UI update completed');
+            }
+        }, 100);
+        
+        // ALWAYS create debug helpers - simplifying logic
+        console.log('🔧 Creating debug helpers (always enabled for development)...');
+        console.log('🔧 Environment check:', {
+            HabitusConfig: !!HabitusConfig,
+            debug: HabitusConfig?.debug,
+            enabled: HabitusConfig?.debug?.enabled,
+            hostname: location.hostname,
+            protocol: location.protocol,
+            CheckIn: !!CheckIn,
+            Tasks: !!Tasks
+        });
+        
+        // FORCE CREATE DEBUG OBJECT ALWAYS
+        {
+            window.HabitusDebug = {
+                // Enhanced debug commands with better error handling
+                forceCheckIn: () => {
+                    console.log('🎯 Forcing check-in state...');
+                    if (!CheckIn) {
+                        console.error('❌ CheckIn module not loaded');
+                        return false;
+                    }
+                    if (!CheckIn.debug) {
+                        console.error('❌ CheckIn debug functions not available');
+                        return false;
+                    }
+                    try {
+                        CheckIn.debug.forceCheckIn();
+                        console.log('✅ Check-in forced. UI should update.');
+                        return true;
+                    } catch (error) {
+                        console.error('❌ Error forcing check-in:', error);
+                        return false;
+                    }
+                },
+                resetCheckIn: () => {
+                    console.log('🔄 Resetting check-in state...');
+                    if (!CheckIn?.debug?.reset) {
+                        console.error('❌ CheckIn reset function not available');
+                        return false;
+                    }
+                    try {
+                        CheckIn.debug.reset();
+                        console.log('✅ Check-in reset. UI should update.');
+                        return true;
+                    } catch (error) {
+                        console.error('❌ Error resetting check-in:', error);
+                        return false;
+                    }
+                },
+                getCheckInState: () => {
+                    if (!CheckIn?.debug?.getState) {
+                        console.error('❌ CheckIn getState function not available');
+                        return null;
+                    }
+                    const state = CheckIn.debug.getState();
+                    console.log('📊 Current check-in state:', state);
+                    return state;
+                },
+                setCheckInState: (state) => {
+                    console.log('⚙️ Setting check-in state:', state);
+                    if (!CheckIn?.debug?.setState) {
+                        console.error('❌ CheckIn setState function not available');
+                        return false;
+                    }
+                    try {
+                        CheckIn.debug.setState(state);
+                        console.log('✅ State updated. UI should reflect changes.');
+                        return true;
+                    } catch (error) {
+                        console.error('❌ Error setting state:', error);
+                        return false;
+                    }
+                },
+                showCheckInModal: () => {
+                    console.log('📱 Showing check-in modal...');
+                    if (!CheckIn?.showModal) {
+                        console.error('❌ CheckIn showModal function not available');
+                        return false;
+                    }
+                    try {
+                        CheckIn.showModal();
+                        return true;
+                    } catch (error) {
+                        console.error('❌ Error showing modal:', error);
+                        return false;
+                    }
+                },
+                
+                // Test scenarios with enhanced feedback
+                simulateWeekPassed: () => {
+                    console.log('⏰ Simulating week passed (blocking check-in)...');
+                    if (!CheckIn?.debug?.setState) {
+                        console.error('❌ CheckIn setState function not available');
+                        return false;
+                    }
+                    try {
+                        const lastWeek = new Date();
+                        lastWeek.setDate(lastWeek.getDate() - 8);
+                        CheckIn.debug.setState({
+                            lastCheckIn: lastWeek,
+                            currentWeekStart: null,
+                            isPending: true,
+                            isBlocking: true,
+                            reminderCount: 0
+                        });
+                        
+                        // Verify UI update with detailed feedback for single button
+                        setTimeout(() => {
+                            const checkInBtn = document.getElementById('checkInBtn');
+                            const statusIndicator = document.getElementById('checkInStatusIndicator');
+                            
+                            console.log('🔍 DETAILED UI STATUS AFTER SIMULATION:');
+                            console.log('======================================');
+                            
+                            if (checkInBtn) {
+                                console.log('Check-in Button (SINGLE BUTTON):', {
+                                    text: checkInBtn.textContent,
+                                    disabled: checkInBtn.disabled,
+                                    classes: checkInBtn.className,
+                                    clickable: !!checkInBtn.onclick,
+                                    expectedState: 'Should be "⚠️ Check-in Requerido" and enabled'
+                                });
+                            } else {
+                                console.log('❌ Check-in button not found!');
+                            }
+                            
+                            if (statusIndicator) {
+                                console.log('Status Indicator:', {
+                                    content: statusIndicator.innerHTML,
+                                    expectedState: 'Should show warning/required status'
+                                });
+                            }
+                            
+                            console.log('======================================');
+                            
+                            // Validate expected behavior for single button
+                            const isCorrect = checkInBtn?.textContent?.includes('Check-in Requerido') &&
+                                            checkInBtn?.disabled === false &&
+                                            !!checkInBtn?.onclick;
+                                            
+                            console.log(isCorrect ? '✅ SINGLE BUTTON UI UPDATE SUCCESSFUL!' : '❌ SINGLE BUTTON UI UPDATE FAILED');
+                            
+                            if (!isCorrect) {
+                                console.log('Expected: Button should show "⚠️ Check-in Requerido" and be enabled');
+                                console.log('Actual:', checkInBtn ? {
+                                    text: checkInBtn.textContent,
+                                    disabled: checkInBtn.disabled,
+                                    hasClick: !!checkInBtn.onclick
+                                } : 'Button not found');
+                            }
+                        }, 200);
+                        
+                        console.log('✅ Week passed simulated. Check UI - Nueva Semana button should be hidden.');
+                        return true;
+                    } catch (error) {
+                        console.error('❌ Error simulating week passed:', error);
+                        return false;
+                    }
+                },
+                simulateGracePeriod: () => {
+                    console.log('⚡ Simulating grace period (non-blocking check-in)...');
+                    if (!CheckIn?.debug?.setState) {
+                        console.error('❌ CheckIn setState function not available');
+                        return false;
+                    }
+                    try {
+                        const lastWeek = new Date();
+                        lastWeek.setDate(lastWeek.getDate() - 7);
+                        CheckIn.debug.setState({
+                            lastCheckIn: lastWeek,
+                            currentWeekStart: null,
+                            isPending: true,
+                            isBlocking: false,
+                            reminderCount: 1
+                        });
+                        console.log('✅ Grace period simulated. Check UI - both buttons may be visible.');
+                        return true;
+                    } catch (error) {
+                        console.error('❌ Error simulating grace period:', error);
+                        return false;
+                    }
+                },
+                
+                // Comprehensive diagnostic command
+                diagnose: () => {
+                    console.log('🔍 COMPREHENSIVE DIAGNOSTIC REPORT');
+                    console.log('=====================================');
+                    
+                    // 1. Modules availability
+                    console.log('📦 Modules Status:');
+                    console.log('  CheckIn:', !!CheckIn, CheckIn ? 'Available' : 'NOT LOADED');
+                    console.log('  Tasks:', !!Tasks, Tasks ? 'Available' : 'NOT LOADED');
+                    console.log('  HabitusConfig:', !!HabitusConfig, HabitusConfig ? 'Available' : 'NOT LOADED');
+                    
+                    // 2. Debug functions availability
+                    console.log('🛠️ Debug Functions:');
+                    if (CheckIn?.debug) {
+                        console.log('  CheckIn.debug.setState:', typeof CheckIn.debug.setState);
+                        console.log('  CheckIn.debug.getState:', typeof CheckIn.debug.getState);
+                        console.log('  CheckIn.debug.reset:', typeof CheckIn.debug.reset);
+                        console.log('  CheckIn.debug.forceCheckIn:', typeof CheckIn.debug.forceCheckIn);
+                    } else {
+                        console.log('  ❌ CheckIn.debug not available');
+                    }
+                    
+                    // 3. UI Elements
+                    console.log('🎨 UI Elements:');
+                    const elements = {
+                        checkInBtn: document.getElementById('checkInBtn'),
+                        productivityInsights: document.getElementById('productivityInsights'),
+                        totalTasks: document.getElementById('totalTasks'),
+                        checkInStatusIndicator: document.getElementById('checkInStatusIndicator')
+                    };
+                    
+                    Object.entries(elements).forEach(([name, element]) => {
+                        console.log(`  ${name}:`, element ? {
+                            exists: true,
+                            visible: element.style.display !== 'none',
+                            text: element.textContent?.substring(0, 20) + '...'
+                        } : 'NOT FOUND');
+                    });
+                    
+                    // 4. Current state
+                    if (CheckIn?.debug?.getState) {
+                        console.log('📊 Current CheckIn State:');
+                        console.log('  ', CheckIn.debug.getState());
+                    }
+                    
+                    // 5. Recommendations
+                    console.log('💡 Recommendations:');
+                    if (!CheckIn) console.log('  - CheckIn module failed to load - check console for errors');
+                    if (!CheckIn?.debug) console.log('  - CheckIn debug functions not available');
+                    if (!elements.productivityInsights) console.log('  - New UI not loaded - try hard refresh');
+                    if (!elements.checkInBtn) console.log('  - Check-in button not found - verify HTML structure');
+                    if (!elements.checkInStatusIndicator) console.log('  - Status indicator not found - may be created dynamically');
+                    
+                    console.log('=====================================');
+                    return {
+                        modules: { CheckIn: !!CheckIn, Tasks: !!Tasks, HabitusConfig: !!HabitusConfig },
+                        ui: Object.fromEntries(Object.entries(elements).map(([k,v]) => [k, !!v])),
+                        debug: !!CheckIn?.debug
+                    };
+                },
+
+                // Aliases for common typos/variations
+                SimulateWeekPassed: function() { return this.simulateWeekPassed(); },
+                Simulateweekpassed: function() { return this.simulateWeekPassed(); },
+                simulateweekpassed: function() { return this.simulateWeekPassed(); },
+                showmodal: () => CheckIn?.showModal(),
+                showModal: () => CheckIn?.showModal(),
+                
+                // Migration helpers
+                exportData: () => Migration?.exportCompleteData(),
+                testMigrationData: () => Migration?.prepareMigrationData(),
+                getMigrationSchema: () => Migration?.getSchema(),
+                
+                // UI debugging - Single button system
+                debugUI: () => {
+                    const checkInBtn = document.getElementById('checkInBtn');
+                    const statusIndicator = document.getElementById('checkInStatusIndicator');
+                    
+                    console.log('🔍 SINGLE BUTTON UI DEBUG:');
+                    console.log('===========================');
+                    console.log('Check-in Button:', checkInBtn ? {
+                        exists: true,
+                        text: checkInBtn.textContent,
+                        disabled: checkInBtn.disabled,
+                        hasClick: !!checkInBtn.onclick,
+                        classes: checkInBtn.className,
+                        visible: checkInBtn.style.display !== 'none'
+                    } : '❌ NOT FOUND');
+                    
+                    console.log('Status Indicator:', statusIndicator ? {
+                        exists: true,
+                        content: statusIndicator.innerHTML.substring(0, 100) + '...'
+                    } : '❌ NOT FOUND');
+                    
+                    const checkInState = CheckIn?.debug?.getState();
+                    console.log('Check-in State:', checkInState);
+                    console.log('===========================');
+                    
+                    return { 
+                        buttonExists: !!checkInBtn,
+                        statusExists: !!statusIndicator,
+                        buttonState: checkInBtn ? {
+                            text: checkInBtn.textContent,
+                            disabled: checkInBtn.disabled,
+                            clickable: !!checkInBtn.onclick
+                        } : null,
+                        checkInState
+                    };
+                },
+                
+                // Force UI update
+                forceUIUpdate: () => {
+                    console.log('🔄 Forcing UI update...');
+                    CheckIn?.forceUIUpdate();
+                },
+                
+                // Quick test method
+                quickTest: () => {
+                    console.log('🚀 Running quick test...');
+                    HabitusDebug.debugUI();
+                    console.log('Setting check-in pending...');
+                    HabitusDebug.simulateWeekPassed();
+                    setTimeout(() => {
+                        console.log('UI after simulation:');
+                        HabitusDebug.debugUI();
+                    }, 200);
+                },
+                
+                // Chart debugging
+                debugCharts: () => {
+                    console.log('📊 Chart Debug Info:');
+                    if (Tasks && Tasks.debugMetricsData) {
+                        Tasks.debugMetricsData();
+                    } else {
+                        console.log('❌ Tasks module or debugMetricsData not available');
+                    }
+                },
+                
+                // Generate sample metrics for testing
+                generateSampleMetrics: () => {
+                    console.log('📊 Generating sample metrics for testing...');
+                    const sampleMetrics = [
+                        {
+                            timestamp: Date.now() - (7 * 24 * 60 * 60 * 1000 * 3), // 3 weeks ago
+                            totalTasks: 10,
+                            completedTasks: 8,
+                            activeRoles: 3,
+                            quadrants: [3, 2, 3, 2]
+                        },
+                        {
+                            timestamp: Date.now() - (7 * 24 * 60 * 60 * 1000 * 2), // 2 weeks ago
+                            totalTasks: 12,
+                            completedTasks: 9,
+                            activeRoles: 4,
+                            quadrants: [4, 3, 3, 2]
+                        },
+                        {
+                            timestamp: Date.now() - (7 * 24 * 60 * 60 * 1000), // 1 week ago
+                            totalTasks: 8,
+                            completedTasks: 6,
+                            activeRoles: 2,
+                            quadrants: [2, 2, 2, 2]
+                        }
+                    ];
+                    
+                    localStorage.setItem('habitus_metrics', JSON.stringify(sampleMetrics));
+                    console.log('✅ Sample metrics generated. Reload to see charts with data.');
+                    console.log('Metrics stored:', sampleMetrics);
+                },
+                
+                // Cache management
+                clearCache: async () => {
+                    console.log('🧹 Clearing all caches...');
+                    try {
+                        const cacheNames = await caches.keys();
+                        await Promise.all(cacheNames.map(name => caches.delete(name)));
+                        console.log('✅ All caches cleared. Now reload the page.');
+                        return true;
+                    } catch (error) {
+                        console.error('❌ Error clearing cache:', error);
+                        return false;
+                    }
+                },
+                
+                // Force page reload with cache bypass
+                hardRefresh: () => {
+                    console.log('🔄 Performing hard refresh...');
+                    window.location.reload(true);
+                },
+                
+                // Check if new UI is loaded
+                checkNewUI: () => {
+                    const panel = Array.from(document.querySelectorAll('h2')).find(h => h.textContent.includes('Panel de Productividad'));
+                    const insights = document.getElementById('productivityInsights');
+                    const eisenhower = Array.from(document.querySelectorAll('h3')).find(h => h.textContent.includes('Distribución Eisenhower'));
+                    
+                    console.log('🔍 New UI Check:', {
+                        panelFound: !!panel,
+                        insightsFound: !!insights,
+                        eisenhowerFound: !!eisenhower,
+                        recommendation: !panel ? 'Hard refresh needed (Ctrl+Shift+R)' : 'New UI loaded successfully!'
+                    });
+                    
+                    return !!panel && !!insights;
+                }
+            };
+            console.log('Debug helpers available:', Object.keys(window.HabitusDebug));
+            
+            // Test debug functionality immediately
+            setTimeout(() => {
+                console.log('🧪 AUTOMATIC DEBUG TESTING');
+                console.log('=============================');
+                
+                // 1. Test object existence
+                console.log('1. HabitusDebug object:', !!window.HabitusDebug);
+                if (!window.HabitusDebug) {
+                    console.error('❌ CRITICAL: HabitusDebug not created!');
+                    return;
+                }
+                
+                // 2. Test available methods
+                console.log('2. Available methods:', Object.keys(window.HabitusDebug));
+                
+                // 3. Test specific methods exist and are functions
+                const requiredMethods = ['simulateWeekPassed', 'debugUI', 'resetCheckIn', 'diagnose', 'checkNewUI'];
+                const methodResults = {};
+                requiredMethods.forEach(method => {
+                    const exists = typeof window.HabitusDebug[method] === 'function';
+                    methodResults[method] = exists;
+                    console.log(`   ${method}:`, exists ? '✅ Function' : '❌ Missing');
+                });
+                
+                // 4. Test one non-destructive command
+                console.log('3. Testing debugUI() command...');
+                try {
+                    if (window.HabitusDebug.debugUI) {
+                        const result = window.HabitusDebug.debugUI();
+                        console.log('   debugUI() executed:', result !== false ? '✅ Success' : '❌ Failed');
+                    }
+                } catch (error) {
+                    console.error('   debugUI() error:', error);
+                }
+                
+                // 5. Test diagnose command
+                console.log('4. Testing diagnose() command...');
+                try {
+                    if (window.HabitusDebug.diagnose) {
+                        console.log('   Running full diagnostic...');
+                        window.HabitusDebug.diagnose();
+                    }
+                } catch (error) {
+                    console.error('   diagnose() error:', error);
+                }
+                
+                console.log('=============================');
+                console.log('🎯 Ready for manual testing! Try:');
+                console.log('   HabitusDebug.simulateWeekPassed()');
+                console.log('   HabitusDebug.diagnose()');
+                console.log('=============================');
+            }, 1500);
+        }
+        
+        console.log('Application initialized successfully');
+        
+        // Show final status and usage instructions
+        setTimeout(() => {
+            console.log('%c🎉 HABITUS DEBUG SYSTEM READY!', 'background: green; color: white; font-weight: bold; padding: 10px; font-size: 16px;');
+            console.log('%c📋 AVAILABLE COMMANDS:', 'background: blue; color: white; font-weight: bold; padding: 5px;');
+            console.log('%c  HabitusDebug.simulateWeekPassed() - Test check-in system', 'background: lightblue; color: black; padding: 3px;');
+            console.log('%c  HabitusDebug.resetCheckIn() - Reset check-in state', 'background: lightblue; color: black; padding: 3px;');
+            console.log('%c  HabitusDebug.debugUI() - Check button states', 'background: lightblue; color: black; padding: 3px;');
+            console.log('%c  HabitusDebug.diagnose() - Full system diagnostic', 'background: lightblue; color: black; padding: 3px;');
+            console.log('%c  HabitusDebug.checkNewUI() - Verify new interface loaded', 'background: lightblue; color: black; padding: 3px;');
+            console.log('%c  HabitusDebug.generateSampleMetrics() - Create test data', 'background: lightblue; color: black; padding: 3px;');
+            console.log('%c🚀 TRY THIS NOW: HabitusDebug.simulateWeekPassed()', 'background: orange; color: white; font-weight: bold; padding: 5px;');
+            
+            if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
+                console.log('%c⚠️ If commands don\'t work: Press Ctrl+Shift+R to hard refresh', 'background: yellow; color: black; padding: 5px;');
+            }
+        }, 2500);
+    } catch (error) {
+        console.error('Error initializing application:', error);
+    }
+}
+
+// Data migration function
+async function migrateData() {
+    try {
+        // Get old data
+        const oldTasks = JSON.parse(localStorage.getItem('habitus_tasks') || '[]');
+        const oldMetrics = JSON.parse(localStorage.getItem('habitus_metrics') || '[]');
+        const oldTasksLog = JSON.parse(localStorage.getItem('habitus_tasksLog') || '[]');
+        const oldLastReview = localStorage.getItem('habitus_lastReview') || '';
+        const oldLastReset = localStorage.getItem('habitus_lastReset');
+        const oldRoles = JSON.parse(localStorage.getItem('habitus_roles') || '[]');
+        
+        // Backup old data
+        localStorage.setItem('habitus_tasks_backup', JSON.stringify(oldTasks));
+        localStorage.setItem('habitus_metrics_backup', JSON.stringify(oldMetrics));
+        localStorage.setItem('habitus_tasksLog_backup', JSON.stringify(oldTasksLog));
+        localStorage.setItem('habitus_lastReview_backup', oldLastReview);
+        localStorage.setItem('habitus_lastReset_backup', oldLastReset || '');
+        localStorage.setItem('habitus_roles_backup', JSON.stringify(oldRoles));
+        
+        // Migrate tasks to new format
+        const newTasks = oldTasks.map(task => ({
+            ...task,
+            quadrant: task.quadrant?.toString() || '1', // Ensure quadrant is a string
+            role: task.role || 'Default', // Ensure role exists
+            completed: Boolean(task.completed), // Ensure completed is boolean
+            createdAt: task.createdAt || new Date().toISOString() // Ensure createdAt exists
+        }));
+        
+        // Save new data
+        localStorage.setItem('habitus_tasks', JSON.stringify(newTasks));
+        localStorage.setItem('habitus_metrics', JSON.stringify(oldMetrics));
+        localStorage.setItem('habitus_tasksLog', JSON.stringify(oldTasksLog));
+        localStorage.setItem('habitus_lastReview', oldLastReview);
+        localStorage.setItem('habitus_lastReset', oldLastReset || '');
+        localStorage.setItem('habitus_roles', JSON.stringify(oldRoles));
+        
+        // Refresh the UI
+        window.location.reload();
+        
+        App.showNotification('Data migration completed successfully', 'success');
+    } catch (error) {
+        console.error('Error during data migration:', error);
+        App.showNotification('Error during data migration', 'error');
+    }
+}
+
+// Initialize app when DOM is loaded
+document.addEventListener('DOMContentLoaded', () => {
+    console.log('[HTML] DOM loaded, initializing app...');
+    // Add a small delay to ensure all scripts are loaded
+    setTimeout(initApp, 100);
+});
+
+// Register service worker only when running on http/https
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', async () => {
+        // Check if we're running on http/https
+        if (window.location.protocol === 'http:' || window.location.protocol === 'https:') {
+            try {
+                const registration = await navigator.serviceWorker.register('./service-worker-unified.js', {
+                    scope: './'
+                });
+                console.log('ServiceWorker registration successful:', registration);
+                
+                // Listen for updates
+                registration.addEventListener('updatefound', () => {
+                    const newWorker = registration.installing;
+                    if (newWorker) {
+                        newWorker.addEventListener('statechange', () => {
+                            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                // New version available
+                                if (confirm('Nueva versión disponible. ¿Recargar para actualizar?')) {
+                                    window.location.reload();
+                                }
+                            }
+                        });
+                    }
+                });
+            } catch (err) {
+                console.error('ServiceWorker registration failed:', err);
+            }
+        } else {
+            console.log('ServiceWorker not registered: Application is running locally (file://)');
+        }
+    });
+}
+
+// Debug script to test tab functionality - IMMEDIATE EXECUTION
+console.log('[DEBUG] Script loaded, setting up tab functionality immediately...');
+
+// Simple tab navigation function
+function setupTabNavigation() {
+    console.log('[DEBUG] Setting up tab navigation...');
+    
+    const tabs = document.querySelectorAll('.tab-main');
+    const tabContents = document.querySelectorAll('.tab-content');
+    
+    console.log('[DEBUG] Found tabs:', tabs.length);
+    console.log('[DEBUG] Found tab contents:', tabContents.length);
+    
+    if (tabs.length === 0 || tabContents.length === 0) {
+        console.error('[DEBUG] No tabs or content found! DOM not ready yet.');
+        return false;
+    }
+    
+            tabs.forEach(tab => {
+            // Remove existing listeners to avoid duplicates
+            tab.removeEventListener('click', tab._clickHandler);
+            
+            // Create new click handler
+            tab._clickHandler = (e) => {
+                e.preventDefault();
+                const tabName = tab.dataset.tab;
+                console.log('[DEBUG] Tab clicked:', tabName);
+                
+                // FIRST: Update tab indicators (remove active from all, add to clicked)
+                tabs.forEach(t => {
+                    t.classList.remove('active');
+                    t.classList.remove('border-indigo-500', 'text-gray-700');
+                    t.classList.add('border-transparent', 'text-gray-600');
+                });
+                
+                // Add active state to clicked tab
+                tab.classList.add('active');
+                tab.classList.add('border-indigo-500', 'text-gray-700');
+                tab.classList.remove('border-transparent', 'text-gray-600');
+                
+                // SECOND: Hide all content (but preserve it)
+                tabContents.forEach(content => {
+                    if (content.dataset.tab === tabName) {
+                        // Show this content
+                        content.classList.remove('hidden');
+                        content.classList.add('active');
+                        console.log(`[DEBUG] Showing content for: ${tabName}`);
+                    } else {
+                        // Hide other content
+                        content.classList.add('hidden');
+                        content.classList.remove('active');
+                        console.log(`[DEBUG] Hiding content for: ${content.dataset.tab}`);
+                    }
+                });
+                
+                // THIRD: Check if content needs rendering
+                const targetContent = document.querySelector(`[data-tab="${tabName}"]`);
+                if (targetContent) {
+                    console.log('[DEBUG] Content visibility set for:', tabName);
+                    
+                    // Force render content for this tab if it's empty
+                    if (targetContent.innerHTML.trim().length === 0) {
+                        console.log(`[DEBUG] Tab ${tabName} is empty, forcing render...`);
+                        forceTabContent(tabName);
+                    }
+                }
+                
+                console.log('[DEBUG] Tab switch complete for:', tabName);
+                
+                // Ensure tab state is consistent and force content render
+                setTimeout(() => {
+                    fixTabState();
+                    forceTabContent(tabName);
+                }, 100);
+            };
+            
+            // Add the listener
+            tab.addEventListener('click', tab._clickHandler);
+            console.log('[DEBUG] Added click listener to tab:', tab.dataset.tab);
+        });
+    
+    console.log('[DEBUG] Tab navigation setup complete');
+    return true;
+}
+
+// Debug utility function
+function toggleDebugButtons() {
+    const debugButtons = document.getElementById('debugButtons');
+    if (debugButtons) {
+        const isHidden = debugButtons.classList.contains('hidden');
+        debugButtons.classList.toggle('hidden');
+        console.log(`🔧 Debug buttons ${isHidden ? 'shown' : 'hidden'}`);
+        return !isHidden;
+    }
+    console.log('🔧 Debug buttons element not found');
+    return false;
+}
+
+// Test function for the debug button
+function testTabNavigation() {
+    console.log('[DEBUG] === TESTING TAB NAVIGATION ===');
+    
+    const tabs = document.querySelectorAll('.tab-main');
+    const tabContents = document.querySelectorAll('.tab-content');
+    
+    console.log('Tabs found:', tabs.length);
+    tabs.forEach(tab => {
+        console.log(`Tab: ${tab.dataset.tab}, Active: ${tab.classList.contains('active')}`);
+    });
+    
+    console.log('Tab contents found:', tabContents.length);
+    tabContents.forEach(content => {
+        console.log(`Content: ${content.dataset.tab}, Hidden: ${content.classList.contains('hidden')}`);
+    });
+    
+    console.log('[DEBUG] === END TEST ===');
+}
+
+// Try to set up navigation immediately
+let setupAttempts = 0;
+const maxAttempts = 10;
+
+function attemptSetup() {
+    setupAttempts++;
+    console.log(`[DEBUG] Setup attempt ${setupAttempts}/${maxAttempts}...`);
+    
+    if (setupTabNavigation()) {
+        console.log('[DEBUG] Tab navigation setup successful!');
+        return true;
+    }
+    
+    if (setupAttempts < maxAttempts) {
+        console.log(`[DEBUG] Setup failed, retrying in 100ms...`);
+        setTimeout(attemptSetup, 100);
+    } else {
+        console.error('[DEBUG] Failed to set up tab navigation after all attempts');
+    }
+    
+    return false;
+}
+
+// Start setup attempts
+attemptSetup();
+
+// Also try on DOM ready and window load
+document.addEventListener('DOMContentLoaded', () => {
+    console.log('[DEBUG] DOM ready, attempting setup...');
+    attemptSetup();
+});
+
+window.addEventListener('load', () => {
+    console.log('[DEBUG] Window loaded, attempting setup...');
+    attemptSetup();
+    
+    // Wait for modules to be available and test them
+    setTimeout(() => {
+        console.log('[DEBUG] === TESTING MODULES AFTER LOAD ===');
+        
+        // Test if modules are available
+        console.log('App module:', !!window.App);
+        console.log('Goals module:', !!window.Goals);
+        console.log('Tasks module:', !!window.Tasks);
+        console.log('CheckIn module:', !!window.CheckIn);
+        
+        // Test module functions
+        if (window.Goals) {
+            console.log('Goals.getGoals():', window.Goals.getGoals());
+            console.log('Goals.renderGoalsView:', typeof window.Goals.renderGoalsView);
+        }
+        
+        if (window.Tasks) {
+            console.log('Tasks.getTasks():', window.Tasks.getTasks());
+            console.log('Tasks.updateUI:', typeof window.Tasks.updateUI);
+        }
+        
+        console.log('[DEBUG] === END MODULES TEST ===');
+    }, 2000);
+    
+    // Monitor modules every 5 seconds
+    const moduleMonitor = setInterval(() => {
+        console.log('[DEBUG] === MODULE MONITOR ===');
+        console.log('App:', !!window.App);
+        console.log('Goals:', !!window.Goals);
+        console.log('Tasks:', !!window.Tasks);
+        console.log('CheckIn:', !!window.CheckIn);
+        
+        // If all modules are available, stop monitoring
+        if (window.App && window.Goals && window.Tasks && window.CheckIn) {
+            console.log('[DEBUG] All modules available, stopping monitor');
+            clearInterval(moduleMonitor);
+            
+            // Force initial render
+            setTimeout(() => {
+                console.log('[DEBUG] Forcing initial render...');
+                forceRenderAll();
+                
+                // Also force content for the active tab
+                const activeTab = document.querySelector('.tab-main.active')?.dataset.tab;
+                if (activeTab) {
+                    console.log('[DEBUG] Forcing content for active tab:', activeTab);
+                    forceTabContent(activeTab);
+                }
+                
+                // Restore all tab content
+                console.log('[DEBUG] Restoring all tab content...');
+                restoreAllTabContent();
+            }, 1000);
+        }
+        
+        console.log('[DEBUG] === END MONITOR ===');
+    }, 5000);
+});
+
+// Immediate test to verify functions are available
+console.log('[DEBUG] === IMMEDIATE FUNCTION TEST ===');
+console.log('setupTabNavigation available:', typeof setupTabNavigation);
+console.log('testTabNavigation available:', typeof testTabNavigation);
+console.log('attemptSetup available:', typeof attemptSetup);
+console.log('[DEBUG] === END FUNCTION TEST ===');
+
+// Immediate DOM inspection
+console.log('[DEBUG] === IMMEDIATE DOM INSPECTION ===');
+const goalsView = document.getElementById('goalsView');
+const tasksGoalsView = document.getElementById('tasksGoalsView');
+const rolesView = document.getElementById('rolesView');
+const quadrantsView = document.getElementById('quadrantsView');
+
+console.log('goalsView:', goalsView);
+console.log('tasksGoalsView:', tasksGoalsView);
+console.log('rolesView:', rolesView);
+console.log('quadrantsView:', quadrantsView);
+
+if (goalsView) console.log('goalsView content:', goalsView.innerHTML);
+if (tasksGoalsView) console.log('tasksGoalsView content:', tasksGoalsView.innerHTML);
+if (rolesView) console.log('rolesView content:', rolesView.innerHTML);
+if (quadrantsView) console.log('quadrantsView content:', quadrantsView.innerHTML);
+
+console.log('[DEBUG] === END DOM INSPECTION ===');
+
+// Additional debug functions
+function forceTabSetup() {
+    console.log('[DEBUG] Force setup requested...');
+    setupAttempts = 0;
+    attemptSetup();
+}
+
+function testTabClick(tabName) {
+    console.log('[DEBUG] Testing click on tab:', tabName);
+    
+    const tab = document.querySelector(`[data-tab="${tabName}"]`);
+    if (tab) {
+        console.log('[DEBUG] Found tab, simulating click...');
+        tab.click();
+    } else {
+        console.error('[DEBUG] Tab not found:', tabName);
+    }
+}
+
+// Test Goals module functionality
+function testGoalsModule() {
+    console.log('[DEBUG] === TESTING GOALS MODULE ===');
+    
+    // Check if Goals module is available
+    if (window.Goals) {
+        console.log('✅ Goals module found');
+        
+        // Check goals data
+        const goals = window.Goals.getGoals();
+        console.log('Goals data:', goals);
+        
+        // Check goals view element
+        const goalsView = document.getElementById('goalsView');
+        if (goalsView) {
+            console.log('✅ Goals view element found');
+            console.log('Goals view content:', goalsView.innerHTML);
+        } else {
+            console.error('❌ Goals view element not found');
+        }
+        
+        // Force render
+        if (window.Goals.renderGoalsView) {
+            console.log('Forcing goals render...');
+            window.Goals.renderGoalsView();
+            console.log('Goals view after render:', goalsView?.innerHTML);
+        }
+        
+    } else {
+        console.error('❌ Goals module not found');
+    }
+    
+    console.log('[DEBUG] === END GOALS TEST ===');
+}
+
+// Test Tasks module functionality
+function testTasksModule() {
+    console.log('[DEBUG] === TESTING TASKS MODULE ===');
+    
+    // Check if Tasks module is available
+    if (window.Tasks) {
+        console.log('✅ Tasks module found');
+        
+        // Check tasks data
+        const tasks = window.Tasks.getTasks();
+        console.log('Tasks data:', tasks);
+        
+        // Check views
+        const rolesView = document.getElementById('rolesView');
+        const tasksGoalsView = document.getElementById('tasksGoalsView');
+        const quadrantsView = document.getElementById('quadrantsView');
+        
+        console.log('Roles view:', rolesView?.innerHTML);
+        console.log('Tasks goals view:', tasksGoalsView?.innerHTML);
+        console.log('Quadrants view:', quadrantsView?.innerHTML);
+        
+    } else {
+        console.error('❌ Tasks module not found');
+    }
+    
+    console.log('[DEBUG] === END TASKS TEST ===');
+}
+
+// Force render all modules
+function forceRenderAll() {
+    console.log('[DEBUG] === FORCING RENDER OF ALL MODULES ===');
+    
+    // Force Goals render
+    if (window.Goals && window.Goals.renderGoalsView) {
+        console.log('Forcing Goals render...');
+        window.Goals.renderGoalsView();
+    }
+    
+    // Force Tasks render
+    if (window.Tasks && window.Tasks.updateUI) {
+        console.log('Forcing Tasks render...');
+        window.Tasks.updateUI();
+    }
+    
+    // Force CheckIn render
+    if (window.CheckIn && window.CheckIn.forceUIUpdate) {
+        console.log('Forcing CheckIn render...');
+        window.CheckIn.forceUIUpdate();
+    }
+    
+    // Check results
+    setTimeout(() => {
+        console.log('[DEBUG] === RENDER RESULTS ===');
+        const goalsView = document.getElementById('goalsView');
+        const tasksGoalsView = document.getElementById('tasksGoalsView');
+        const rolesView = document.getElementById('rolesView');
+        
+        console.log('Goals view after render:', goalsView?.innerHTML);
+        console.log('Tasks goals view after render:', tasksGoalsView?.innerHTML);
+        console.log('Roles view after render:', rolesView?.innerHTML);
+        console.log('[DEBUG] === END RENDER RESULTS ===');
+    }, 500);
+    
+    console.log('[DEBUG] === END FORCE RENDER ===');
+}
+
+// Restore all tab content
+function restoreAllTabContent() {
+    console.log('[DEBUG] === RESTORING ALL TAB CONTENT ===');
+    
+    const tabs = ['roles', 'goals', 'tasks', 'checkin'];
+    
+    tabs.forEach(tabName => {
+        console.log(`[DEBUG] Restoring content for tab: ${tabName}`);
+        
+        // Get the content element
+        const contentElement = document.querySelector(`[data-tab="${tabName}"]`);
+        if (contentElement) {
+            // Check if content is empty
+            if (contentElement.innerHTML.trim().length === 0) {
+                console.log(`[DEBUG] Tab ${tabName} already has content`);
+            } else {
+                console.log(`[DEBUG] Tab ${tabName} is empty, forcing render...`);
+                forceTabContent(tabName);
+            }
+        } else {
+            console.error(`[DEBUG] Content element for tab ${tabName} not found`);
+        }
+    });
+    
+    console.log('[DEBUG] === END RESTORE ALL TAB CONTENT ===');
+}
+
+// Test simple navigation
+function testSimpleNavigation() {
+    console.log('[DEBUG] === TESTING SIMPLE NAVIGATION ===');
+    
+    // Test switching to each tab
+    const tabs = ['roles', 'goals', 'tasks', 'checkin'];
+    
+    tabs.forEach((tabName, index) => {
+        setTimeout(() => {
+            console.log(`[DEBUG] Testing navigation to: ${tabName}`);
+            
+            // Simulate tab click
+            const tab = document.querySelector(`[data-tab="${tabName}"]`);
+            if (tab) {
+                tab.click();
+                
+                // Check result after a short delay
+                setTimeout(() => {
+                    const content = document.querySelector(`[data-tab="${tabName}"]`);
+                    const isVisible = !content.classList.contains('hidden');
+                    const hasContent = content.innerHTML.trim().length > 0;
+                    
+                    console.log(`[DEBUG] Tab ${tabName}:`, {
+                        visible: isVisible,
+                        hasContent: hasContent,
+                        contentLength: content.innerHTML.length
+                    });
+                }, 200);
+            }
+        }, index * 500); // Test each tab with 500ms delay
+    });
+    
+    console.log('[DEBUG] === END SIMPLE NAVIGATION TEST ===');
+}
+
+// Test goal options functionality
+function testGoalOptions() {
+    console.log('[DEBUG] === TESTING GOAL OPTIONS ===');
+    
+    // Check if Tasks module is available
+    if (window.Tasks) {
+        console.log('✅ Tasks module found');
+        
+        // Check if updateGoalOptions function exists
+        if (window.Tasks.updateGoalOptions) {
+            console.log('✅ updateGoalOptions function found');
+            
+            // Force update goal options
+            console.log('Forcing goal options update...');
+            window.Tasks.updateGoalOptions();
+            
+            // Check the goal select element
+            const goalSelect = document.querySelector('#goalSelect');
+            if (goalSelect) {
+                console.log('✅ Goal select element found');
+                console.log('Current options:', goalSelect.innerHTML);
+                console.log('Number of options:', goalSelect.options.length);
+            } else {
+                console.error('❌ Goal select element not found');
+            }
+        } else {
+            console.error('❌ updateGoalOptions function not found');
+        }
+    } else {
+        console.error('❌ Tasks module not found');
+    }
+    
+    // Check if Goals module is available
+    if (window.Goals) {
+        console.log('✅ Goals module found');
+        const goals = window.Goals.getGoals();
+        console.log('Available goals:', goals);
+    } else {
+        console.error('❌ Goals module not found');
+    }
+    
+    console.log('[DEBUG] === END GOAL OPTIONS TEST ===');
+}
+
+// Force update goal options
+function forceUpdateGoalOptions() {
+    console.log('[DEBUG] === FORCING GOAL OPTIONS UPDATE ===');
+    
+    // Check if we're in the Tasks tab
+    const tasksTab = document.querySelector('[data-tab="tasks"]');
+    if (tasksTab && !tasksTab.classList.contains('hidden')) {
+        console.log('[DEBUG] Tasks tab is visible, updating goal options...');
+        
+        if (window.Tasks && window.Tasks.updateGoalOptions) {
+            console.log('[DEBUG] Calling Tasks.updateGoalOptions()...');
+            window.Tasks.updateGoalOptions();
+            
+            // Check the result
+            setTimeout(() => {
+                const goalSelect = document.querySelector('#goalSelect');
+                if (goalSelect) {
+                    console.log('[DEBUG] Goal select after update:');
+                    console.log('Options count:', goalSelect.options.length);
+                    console.log('Options:', Array.from(goalSelect.options).map(opt => opt.textContent));
+                }
+            }, 100);
+        } else {
+            console.error('[DEBUG] Tasks module or updateGoalOptions not available');
+        }
+    } else {
+        console.log('[DEBUG] Tasks tab is not visible, switching to it first...');
+        // Switch to tasks tab first
+        const tasksTabButton = document.querySelector('[data-tab="tasks"]');
+        if (tasksTabButton) {
+            tasksTabButton.click();
+            setTimeout(() => {
+                console.log('[DEBUG] Now updating goal options...');
+                if (window.Tasks && window.Tasks.updateGoalOptions) {
+                    window.Tasks.updateGoalOptions();
+                }
+            }, 200);
+        }
+    }
+    
+    console.log('[DEBUG] === END FORCE GOAL OPTIONS UPDATE ===');
+}
+
+// Test complete goal flow
+function testCompleteGoalFlow() {
+    console.log('[DEBUG] === TESTING COMPLETE GOAL FLOW ===');
+    
+    // Step 1: Check current state
+    console.log('[DEBUG] Step 1: Checking current state...');
+    
+    if (window.Goals) {
+        const currentGoals = window.Goals.getGoals();
+        console.log('[DEBUG] Current goals:', currentGoals);
+    }
+    
+    if (window.Tasks) {
+        const goalSelect = document.querySelector('#goalSelect');
+        if (goalSelect) {
+            console.log('[DEBUG] Current goal select options:', goalSelect.options.length);
+            console.log('[DEBUG] Options:', Array.from(goalSelect.options).map(opt => opt.textContent));
+        }
+    }
+    
+    // Step 2: Switch to Goals tab and create a test goal
+    console.log('[DEBUG] Step 2: Switching to Goals tab...');
+    const goalsTab = document.querySelector('[data-tab="goals"]');
+    if (goalsTab) {
+        goalsTab.click();
+        
+        setTimeout(() => {
+            console.log('[DEBUG] Step 3: In Goals tab, checking form...');
+            
+            // Check if goal form is visible
+            const goalForm = document.querySelector('#goalForm');
+            if (goalForm) {
+                console.log('[DEBUG] Goal form found');
+                
+                // Fill form with test data
+                const roleSelect = document.querySelector('#goalRoleSelect');
+                const nameInput = document.querySelector('#goalInput');
+                
+                if (roleSelect && nameInput) {
+                    console.log('[DEBUG] Form elements found, filling with test data...');
+                    
+                    // Select first available role
+                    if (roleSelect.options.length > 1) {
+                        roleSelect.value = roleSelect.options[1].value;
+                        nameInput.value = 'Meta de Prueba ' + Date.now();
+                        
+                        console.log('[DEBUG] Form filled, triggering add goal...');
+                        
+                        // Trigger add goal
+                        const addButton = document.querySelector('#addGoalBtn');
+                        if (addButton) {
+                            addButton.click();
+                            
+                            // Wait and check results
+                            setTimeout(() => {
+                                console.log('[DEBUG] Step 4: Goal created, checking results...');
+                                
+                                // Check if goal was added
+                                const newGoals = window.Goals.getGoals();
+                                console.log('[DEBUG] Goals after creation:', newGoals);
+                                
+                                // Switch to Tasks tab and check options
+                                const tasksTab = document.querySelector('[data-tab="tasks"]');
+                                if (tasksTab) {
+                                    tasksTab.click();
+                                    
+                                    setTimeout(() => {
+                                        console.log('[DEBUG] Step 5: In Tasks tab, checking goal options...');
+                                        
+                                        const goalSelect = document.querySelector('#goalSelect');
+                                        if (goalSelect) {
+                                            console.log('[DEBUG] Final goal select options:', goalSelect.options.length);
+                                            console.log('[DEBUG] Final options:', Array.from(goalSelect.options).map(opt => opt.textContent));
+                                        }
+                                    }, 200);
+                                }
+                            }, 500);
+                        }
+                    } else {
+                        console.log('[DEBUG] No roles available for testing');
+                    }
+                }
+            }
+        }, 200);
+    }
+    
+    console.log('[DEBUG] === END COMPLETE GOAL FLOW TEST ===');
+}
+
+// Debug default goals
+function debugDefaultGoals() {
+    console.log('[DEBUG] === DEBUGGING DEFAULT GOALS ===');
+    
+    // Check Goals module
+    if (window.Goals) {
+        console.log('✅ Goals module found');
+        
+        const allGoals = window.Goals.getGoals();
+        console.log('All goals:', allGoals);
+        
+        // Check default goals
+        const defaultGoals = allGoals.filter(g => g.isDefault);
+        console.log('Default goals:', defaultGoals);
+        
+        // Check roles
+        if (window.Roles) {
+            const roles = window.Roles.getRoles();
+            console.log('Available roles:', roles);
+            
+            // Check default goal for each role
+            roles.forEach(role => {
+                const defaultGoal = window.Goals.getDefaultGoalForRole(role);
+                console.log(`Default goal for role "${role}":`, defaultGoal);
+            });
+        }
+        
+        // Check if default goals are being created
+        console.log('Calling createDefaultGoals...');
+        window.Goals.createDefaultGoals();
+        
+        const updatedGoals = window.Goals.getGoals();
+        console.log('Goals after createDefaultGoals:', updatedGoals);
+        
+    } else {
+        console.error('❌ Goals module not found');
+    }
+    
+    // Check Tasks module
+    if (window.Tasks) {
+        console.log('✅ Tasks module found');
+        
+        if (window.Tasks.updateGoalOptions) {
+            console.log('✅ updateGoalOptions function found');
+        } else {
+            console.error('❌ updateGoalOptions function not found');
+        }
+        
+        if (window.Tasks.moveTasksToDefaultGoal) {
+            console.log('✅ moveTasksToDefaultGoal function found');
+        } else {
+            console.error('❌ moveTasksToDefaultGoal function not found');
+        }
+        
+    } else {
+        console.error('❌ Tasks module not found');
+    }
+    
+    console.log('[DEBUG] === END DEBUGGING DEFAULT GOALS ===');
+}
+
+// Verify all modules are available
+function verifyModules() {
+    console.log('[DEBUG] === VERIFYING ALL MODULES ===');
+    
+    const modules = ['Translations', 'Roles', 'Goals', 'Tasks', 'CheckIn', 'App'];
+    
+    modules.forEach(moduleName => {
+        if (window[moduleName]) {
+            console.log(`✅ ${moduleName} module found`);
+            
+            // Check if it has an init function
+            if (window[moduleName].init) {
+                console.log(`✅ ${moduleName}.init function available`);
+            } else {
+                console.log(`❌ ${moduleName}.init function NOT available`);
+            }
+            
+            // Check specific functions for Goals
+            if (moduleName === 'Goals') {
+                if (window[moduleName].createDefaultGoals) {
+                    console.log(`✅ Goals.createDefaultGoals function available`);
+                } else {
+                    console.log(`❌ Goals.createDefaultGoals function NOT available`);
+                }
+            }
+            
+            // Check specific functions for Tasks
+            if (moduleName === 'Tasks') {
+                if (window[moduleName].updateGoalOptions) {
+                    console.log(`✅ Tasks.updateGoalOptions function available`);
+                } else {
+                    console.log(`❌ Tasks.updateGoalOptions function NOT available`);
+                }
+                
+                if (window[moduleName].getTask) {
+                    console.log(`✅ Tasks.getTask function available`);
+                } else {
+                    console.log(`❌ Tasks.getTask function NOT available`);
+                }
+            }
+            
+        } else {
+            console.error(`❌ ${moduleName} module NOT found`);
+        }
+    });
+    
+    // Test module interactions
+    console.log('[DEBUG] Testing module interactions...');
+    
+    if (window.Goals && window.Tasks) {
+        console.log('[DEBUG] Both Goals and Tasks are available, testing interaction...');
+        
+        try {
+            const goals = window.Goals.getGoals();
+            console.log('[DEBUG] Goals.getGoals() result:', goals);
+            
+            if (window.Tasks.updateGoalOptions) {
+                console.log('[DEBUG] Calling Tasks.updateGoalOptions()...');
+                window.Tasks.updateGoalOptions();
+                console.log('[DEBUG] Tasks.updateGoalOptions() called successfully');
+            }
+        } catch (error) {
+            console.error('[DEBUG] Error testing module interaction:', error);
+        }
+    }
+    
+    console.log('[DEBUG] === END MODULE VERIFICATION ===');
+}
+
+// Fix tab state - ensure only one tab is active
+function fixTabState() {
+    console.log('[DEBUG] === FIXING TAB STATE ===');
+    
+    const tabs = document.querySelectorAll('.tab-main');
+    const tabContents = document.querySelectorAll('.tab-content');
+    
+    // Find which tab should be active (first non-hidden content)
+    let activeTab = null;
+    tabContents.forEach(content => {
+        if (!content.classList.contains('hidden')) {
+            activeTab = content.dataset.tab;
+        }
+    });
+    
+    // If no active content found, default to roles
+    if (!activeTab) {
+        activeTab = 'roles';
+    }
+    
+    console.log('[DEBUG] Setting active tab to:', activeTab);
+    
+    // Reset all tabs
+    tabs.forEach(tab => {
+        tab.classList.remove('active');
+        tab.classList.remove('border-indigo-500', 'text-gray-700');
+        tab.classList.add('border-transparent', 'text-gray-600');
+    });
+    
+    // Set correct active tab
+    const targetTab = document.querySelector(`[data-tab="${activeTab}"]`);
+    if (targetTab) {
+        targetTab.classList.add('active');
+        targetTab.classList.add('border-indigo-500', 'text-gray-700');
+        targetTab.classList.remove('border-transparent', 'text-gray-600');
+    }
+    
+    console.log('[DEBUG] === TAB STATE FIXED ===');
+}
+
+// Diagnose tab content issues
+function diagnoseTabContent() {
+    console.log('[DEBUG] === DIAGNOSING TAB CONTENT ===');
+    
+    const tabs = document.querySelectorAll('.tab-main');
+    const tabContents = document.querySelectorAll('.tab-content');
+    
+    console.log('Active tab:', document.querySelector('.tab-main.active')?.dataset.tab);
+    
+    tabContents.forEach(content => {
+        const tabName = content.dataset.tab;
+        const isHidden = content.classList.contains('hidden');
+        const isActive = content.classList.contains('active');
+        const hasContent = content.innerHTML.trim().length > 0;
+        
+        console.log(`Tab ${tabName}:`, {
+            hidden: isHidden,
+            active: isActive,
+            hasContent: hasContent,
+            contentLength: content.innerHTML.length,
+            content: content.innerHTML.substring(0, 100) + '...'
+        });
+    });
+    
+    console.log('[DEBUG] === END DIAGNOSIS ===');
+}
+
+// Force content rendering for specific tab
+function forceTabContent(tabName) {
+    console.log(`[DEBUG] === FORCING CONTENT FOR TAB: ${tabName} ===`);
+    
+    // First, ensure tab is active
+    const targetTab = document.querySelector(`[data-tab="${tabName}"]`);
+    if (!targetTab) {
+        console.error(`[DEBUG] Tab ${tabName} not found`);
+        return;
+    }
+    
+    // Activate tab
+    document.querySelectorAll('.tab-main').forEach(tab => {
+        tab.classList.remove('active', 'border-indigo-500', 'text-gray-700');
+        tab.classList.add('border-transparent', 'text-gray-600');
+    });
+    
+    targetTab.classList.add('active', 'border-indigo-500', 'text-gray-700');
+    targetTab.classList.remove('border-transparent', 'text-gray-600');
+    
+    // Show content - ONLY change visibility, don't hide everything
+    document.querySelectorAll('.tab-content').forEach(content => {
+        if (content.dataset.tab === tabName) {
+            // Show this content
+            content.classList.remove('hidden');
+            content.classList.add('active');
+            console.log(`[DEBUG] Showing content for: ${tabName}`);
+        } else {
+            // Hide other content
+            content.classList.add('hidden');
+            content.classList.remove('active');
+            console.log(`[DEBUG] Hiding content for: ${content.dataset.tab}`);
+        }
+    });
+    
+    const targetContent = document.querySelector(`[data-tab="${tabName}"]`);
+    if (targetContent) {
+        console.log(`[DEBUG] Content for ${tabName} is now visible`);
+        
+        // Check if content is empty and force render if needed
+        if (targetContent.innerHTML.trim().length === 0) {
+            console.log(`[DEBUG] Tab ${tabName} content is empty, forcing render...`);
+            
+            // Force render based on tab type
+            switch(tabName) {
+                case 'goals':
+                    if (window.Goals && window.Goals.renderGoalsView) {
+                        console.log('[DEBUG] Forcing Goals render...');
+                        window.Goals.renderGoalsView();
+                    } else {
+                        console.error('[DEBUG] Goals module not available');
+                    }
+                    break;
+                case 'tasks':
+                    if (window.Tasks && window.Tasks.updateUI) {
+                        console.log('[DEBUG] Forcing Tasks render...');
+                        window.Tasks.updateUI();
+                    } else {
+                        console.error('[DEBUG] Tasks module not available');
+                    }
+                    break;
+                case 'checkin':
+                    if (window.CheckIn && window.CheckIn.forceUIUpdate) {
+                        console.log('[DEBUG] Forcing CheckIn render...');
+                        window.CheckIn.forceUIUpdate();
+                    } else {
+                        console.error('[DEBUG] CheckIn module not available');
+                    }
+                    break;
+                case 'roles':
+                    if (window.Tasks && window.Tasks.updateUI) {
+                        console.log('[DEBUG] Forcing Roles render...');
+                        window.Tasks.updateUI();
+                    } else {
+                        console.error('[DEBUG] Tasks module not available');
+                    }
+                    break;
+            }
+        } else {
+            console.log(`[DEBUG] Tab ${tabName} already has content, no render needed`);
+        }
+    }
+    
+    console.log(`[DEBUG] === END FORCE CONTENT FOR ${tabName} ===`);
+}
+
+// Make functions globally available
+window.setupTabNavigation = setupTabNavigation;
+window.testTabNavigation = testTabNavigation;
+window.toggleDebugButtons = toggleDebugButtons;
+window.forceTabSetup = forceTabSetup;
+window.testTabClick = testTabClick;
+window.testGoalsModule = testGoalsModule;
+window.testTasksModule = testTasksModule;
+window.forceRenderAll = forceRenderAll;
+window.fixTabState = fixTabState;
+window.diagnoseTabContent = diagnoseTabContent;
+window.forceTabContent = forceTabContent;
+window.restoreAllTabContent = restoreAllTabContent;
+window.testSimpleNavigation = testSimpleNavigation;
+window.testGoalOptions = testGoalOptions;
+window.forceUpdateGoalOptions = forceUpdateGoalOptions;
+window.testCompleteGoalFlow = testCompleteGoalFlow;
+window.debugDefaultGoals = debugDefaultGoals;
+window.verifyModules = verifyModules;
+</script>

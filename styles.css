@@ -1,0 +1,605 @@
+/* Drag and Drop Styles */
+.task-item {
+    display: flex;
+    align-items: center;
+    padding: 0.5rem;
+    margin-bottom: 0.5rem;
+    border-radius: 0.375rem;
+    transition: all 0.2s ease;
+    touch-action: pan-y pinch-zoom;
+    -webkit-user-select: none;
+    user-select: none;
+}
+
+/* Quadrant colors */
+.task-item.q1 {
+    background-color: #FEE2E2;
+    border-color: #FECACA;
+}
+
+.task-item.q2 {
+    background-color: #DCFCE7;
+    border-color: #BBF7D0;
+}
+
+.task-item.q3 {
+    background-color: #FEF9C3;
+    border-color: #FEF08A;
+}
+
+.task-item.q4 {
+    background-color: #F3F4F6;
+    border-color: #E5E7EB;
+}
+
+/* Drag handle */
+.drag-handle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    cursor: grab;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: none;
+    color: #6B7280;
+    font-size: 1.25rem;
+    margin-right: 0.25rem;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.drag-handle:active {
+    cursor: grabbing;
+    background-color: rgba(0, 0, 0, 0.05);
+    border-radius: 4px;
+}
+
+/* Task content */
+.task-content {
+    display: flex;
+    align-items: center;
+    flex: 1;
+    min-width: 0;
+    gap: 0.5rem;
+}
+
+.task-content input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    margin: 0;
+    cursor: pointer;
+    accent-color: #4F46E5;
+}
+
+.task-content span {
+    flex: 1;
+    min-width: 0;
+    word-break: break-word;
+}
+
+.task-content button {
+    padding: 0.25rem;
+    color: #EF4444;
+    opacity: 0.7;
+    transition: opacity 0.2s;
+}
+
+.task-content button:hover {
+    opacity: 1;
+}
+
+/* Dragging state */
+.task-item.dragging {
+    opacity: 0.5;
+    pointer-events: none;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+/* Ghost element */
+
+/* Empty state styling */
+.empty-state {
+    text-align: center;
+    padding: 2rem;
+    color: #6B7280;
+    font-style: italic;
+    background-color: #F9FAFB;
+    border: 2px dashed #D1D5DB;
+    border-radius: 0.5rem;
+    margin: 1rem 0;
+}
+
+.empty-state p {
+    margin: 0;
+    font-size: 0.875rem;
+}
+
+/* Quadrant sections */
+.quadrant-section {
+    border: 2px solid;
+    transition: all 0.2s ease;
+}
+
+.quadrant-section.q1 {
+    border-color: #FECACA;
+    background-color: #FEF2F2;
+}
+
+.quadrant-section.q2 {
+    border-color: #BBF7D0;
+    background-color: #F0FDF4;
+}
+
+.quadrant-section.q3 {
+    border-color: #FEF08A;
+    background-color: #FFFBEB;
+}
+
+.quadrant-section.q4 {
+    border-color: #E5E7EB;
+    background-color: #F9FAFB;
+}
+
+/* Drop zone styling */
+.drop-zone {
+    min-height: 60px;
+    transition: all 0.2s ease;
+}
+
+.drop-zone.drag-over {
+    background-color: #EBF4FF;
+    border-color: #3B82F6;
+    transform: scale(1.02);
+}
+
+/* Task container styling */
+.tasks-container {
+    min-height: 40px;
+    padding: 0.5rem;
+    border-radius: 0.375rem;
+    background-color: #FFFFFF;
+    border: 1px solid #E5E7EB;
+}
+
+/* Drop zone styles */
+.drop-zone {
+    transition: all 0.2s ease;
+    min-height: 20px;
+    border: 2px dashed transparent;
+}
+
+.drop-zone:hover {
+    background-color: rgba(59, 130, 246, 0.05);
+    border-color: rgba(59, 130, 246, 0.3);
+}
+
+.drop-zone.bg-blue-50 {
+    background-color: rgba(59, 130, 246, 0.1);
+    border-color: rgb(59, 130, 246);
+    border-style: solid;
+}
+
+/* Task item drag styles */
+.task-item.cursor-move {
+    cursor: grab;
+}
+
+.task-item.cursor-move:active {
+    cursor: grabbing;
+}
+
+/* Main Tab System Styles */
+.tab-main {
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.tab-main:hover {
+    background-color: #F3F4F6;
+}
+
+.tab-main.active {
+    color: #4F46E5;
+    border-bottom-color: #4F46E5;
+}
+
+.tab-content {
+    transition: all 0.3s ease;
+}
+
+.tab-content.hidden {
+    display: none;
+}
+
+.tab-content.active {
+    display: block;
+    animation: fadeInUp 0.5s ease;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Goal-specific styles */
+.goal-item {
+    border-left: 4px solid;
+    transition: all 0.2s ease;
+}
+
+.goal-item:hover {
+    transform: translateX(4px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* Responsive step indicators */
+@media (max-width: 640px) {
+    .step-indicator {
+        flex-direction: column;
+    }
+    
+    .step-connector {
+        width: 2px;
+        height: 30px;
+        margin: 4px 0;
+    }
+    
+    .step-label {
+        font-size: 10px;
+    }
+}
+.task-ghost {
+    opacity: 0.8;
+    pointer-events: none;
+    z-index: 1000;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+/* Drop target */
+.task-list {
+    min-height: 50px;
+    padding: 0.5rem;
+    border-radius: 0.375rem;
+    transition: background-color 0.2s;
+}
+
+.task-list.drag-over {
+    background-color: rgba(79, 70, 229, 0.1);
+    border: 2px dashed #4F46E5;
+}
+
+/* Mobile optimizations */
+@media (max-width: 640px) {
+    .task-item {
+        padding: 0.375rem;
+        margin-bottom: 0.375rem;
+    }
+
+    .drag-handle {
+        width: 28px;
+        height: 28px;
+        font-size: 1rem;
+        margin-right: 0.125rem;
+    }
+
+    .task-content {
+        gap: 0.375rem;
+    }
+
+    .task-content input[type="checkbox"] {
+        width: 14px;
+        height: 14px;
+        min-width: 14px;
+    }
+
+    .task-content button {
+        padding: 0.125rem;
+        font-size: 1.25rem;
+    }
+
+    /* Prevent text selection during drag */
+    .task-item.dragging {
+        user-select: none;
+        -webkit-user-select: none;
+    }
+
+    /* Ensure proper touch targets */
+    .task-content button,
+    .task-content input[type="checkbox"] {
+        min-width: 28px;
+        min-height: 28px;
+    }
+
+    /* Prevent body scroll during drag */
+    body.dragging {
+        position: fixed;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        touch-action: none;
+        -webkit-overflow-scrolling: touch;
+        overscroll-behavior: none;
+    }
+}
+
+/* Dark mode */
+.dark .task-item.q1 {
+    background-color: rgba(239, 68, 68, 0.1);
+    border-color: rgba(239, 68, 68, 0.2);
+}
+
+.dark .task-item.q2 {
+    background-color: rgba(34, 197, 94, 0.1);
+    border-color: rgba(34, 197, 94, 0.2);
+}
+
+.dark .task-item.q3 {
+    background-color: rgba(234, 179, 8, 0.1);
+    border-color: rgba(234, 179, 8, 0.2);
+}
+
+.dark .task-item.q4 {
+    background-color: rgba(156, 163, 175, 0.1);
+    border-color: rgba(156, 163, 175, 0.2);
+}
+
+.dark .task-list.drag-over {
+    background-color: rgba(79, 70, 229, 0.2);
+    border-color: #6366F1;
+}
+
+.task-item:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.task-item.dragging .drag-handle {
+    cursor: grabbing;
+}
+
+.role-badge, .quadrant-badge {
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+.role-badge:hover, .quadrant-badge:hover {
+    transform: scale(1.05);
+}
+
+/* Drop target styles */
+.role-badge.drag-over {
+    background-color: rgba(59, 130, 246, 0.2) !important;
+    transform: scale(1.1);
+}
+
+.quadrant-badge.drag-over {
+    transform: scale(1.1);
+    box-shadow: 0 0 0 2px currentColor;
+}
+
+/* Animation for task movement */
+@keyframes taskMove {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.02); }
+    100% { transform: scale(1); }
+}
+
+.task-item.moving {
+    animation: taskMove 0.3s ease;
+}
+
+/* Prevent text selection during drag */
+.dragging * {
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+/* Show drag handle on hover/active */
+@media (hover: hover) {
+    .task-item:hover .drag-handle {
+        opacity: 1;
+    }
+}
+
+/* Chart container fixes */
+.chart-container {
+    width: 100%;
+    height: 300px;
+    max-width: 100%;
+    overflow: hidden;
+    position: relative;
+}
+
+.chart-container canvas {
+    max-width: 100% !important;
+    max-height: 100% !important;
+    display: block;
+}
+
+/* Responsive chart adjustments */
+@media (max-width: 768px) {
+    .chart-container {
+        height: 250px;
+    }
+}
+
+@media (max-width: 480px) {
+    .chart-container {
+        height: 200px;
+    }
+}
+
+/* Dark mode */
+@media (prefers-color-scheme: dark) {
+    .drag-handle {
+        color: #999;
+    }
+
+    .drag-handle:active {
+        background-color: rgba(255, 255, 255, 0.1);
+    }
+
+    .task-ghost {
+        background: #1f2937;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    }
+}
+
+/* Check-in modal styles */
+#checkInModal {
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+}
+
+#checkInModal .bg-white {
+    border-radius: 12px;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+}
+
+#checkInModal h2 {
+    border-bottom: 1px solid #e5e7eb;
+    padding-bottom: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+#checkInModal textarea {
+    resize: vertical;
+    min-height: 100px;
+    transition: border-color 0.2s ease;
+}
+
+#checkInModal textarea:focus {
+    border-color: #4f46e5;
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+    outline: none;
+}
+
+/* Check-in status indicators */
+.checkin-status {
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.8;
+    }
+}
+
+/* Task list in check-in modal */
+#checkInModal .space-y-2 > div {
+    padding: 0.5rem;
+    border-radius: 6px;
+    background-color: rgba(255, 255, 255, 0.5);
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    transition: background-color 0.2s ease;
+}
+
+#checkInModal .space-y-2 > div:hover {
+    background-color: rgba(255, 255, 255, 0.8);
+}
+
+/* Responsive adjustments for check-in */
+@media (max-width: 640px) {
+    #checkInModal .max-w-2xl {
+        max-width: 95vw;
+        margin: 1rem;
+    }
+    
+    #checkInModal .grid-cols-2 {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+    
+    #checkInModal .md\\:grid-cols-4 {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    #checkInModal .flex.justify-end.space-x-3 {
+        flex-direction: column;
+        space-x: 0;
+        gap: 0.5rem;
+    }
+}
+
+/* Button improvements */
+.touch-manipulation {
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+}
+
+/* Smooth transitions for UI updates */
+#checkInBtn {
+    transition: all 0.3s ease;
+    min-width: 180px; /* Consistent width for single button */
+}
+
+#checkInStatusIndicator {
+    transition: all 0.2s ease;
+}
+
+/* Single button container - simplified */
+.checkin-single-button {
+    display: block;
+    width: 100%;
+}
+
+/* Disabled button styling */
+.disabled-status-btn {
+    cursor: not-allowed !important;
+    opacity: 0.75;
+    pointer-events: none;
+}
+
+.disabled-status-btn:hover {
+    transform: none !important;
+}
+
+/* Status indicator animation */
+.checkin-status {
+    animation: pulse-subtle 2s infinite;
+}
+
+@keyframes pulse-subtle {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.02); }
+}
+
+/* Responsive button adjustments */
+@media (max-width: 640px) {
+    #checkInBtn {
+        width: 100% !important;
+        min-width: unset;
+    }
+}
+
+/* Prevent scrolling during drag */
+body.dragging {
+    position: fixed;
+    width: 100%;
+    overflow: hidden;
+    touch-action: none;
+    overscroll-behavior: none;
+}
+
+/* Make checkboxes smaller on mobile */
+@media (max-width: 768px) {
+    .task-item input[type="checkbox"] {
+        width: 16px;
+        height: 16px;
+        min-width: 16px;
+        margin-right: 8px;
+    }
+} 

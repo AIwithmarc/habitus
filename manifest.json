@@ -1,0 +1,56 @@
+{
+    "name": "Habitus - Planificador Semanal",
+    "short_name": "Habitus",
+    "description": "Organiza tu semana con claridad y propósito con Habitus.",
+    "start_url": "./",
+    "scope": "./",
+    "display": "standalone",
+    "background_color": "#ffffff",
+    "theme_color": "#4f46e5",
+    "orientation": "portrait",
+    "icons": [
+        {
+            "src": "icons/icon-192x192.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "any maskable"
+        },
+        {
+            "src": "icons/icon-512x512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "any maskable"
+        }
+    ],
+    "shortcuts": [
+        {
+            "name": "Nueva Tarea",
+            "short_name": "Nueva Tarea",
+            "description": "Agregar una nueva tarea",
+            "url": "./?action=new-task",
+            "icons": [{ "src": "icons/icon-192x192.png", "sizes": "192x192" }]
+        },
+        {
+            "name": "Ver Métricas",
+            "short_name": "Métricas",
+            "description": "Ver métricas semanales",
+            "url": "./?action=metrics",
+            "icons": [{ "src": "icons/icon-192x192.png", "sizes": "192x192" }]
+        }
+    ],
+    "screenshots": [
+        {
+            "src": "icons/screenshot1.png",
+            "sizes": "1280x720",
+            "type": "image/png",
+            "platform": "wide",
+            "label": "Vista principal de Habitus"
+        }
+    ],
+    "categories": ["productivity", "lifestyle"],
+    "prefer_related_applications": false,
+    "related_applications": [],
+    "iarc_rating_id": "e84b072d-71b3-4d3e-86ae-31a8ce4e53b7",
+    "lang": "es",
+    "dir": "ltr"
+}
