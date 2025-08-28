@@ -6,7 +6,7 @@
 ## 🆕 **VERSIÓN 4.0.0 - Mejoras Principales**
 
 ### **📱 Navegación Móvil Rediseñada**
-- **Barra de navegación fija inferior** para smartphones (estilo Revolut)
+- **Barra de navegación fija inferior** para smartphones
 - **Navegación unificada** entre PC y móvil
 - **Tabs responsivos** que se adaptan al tamaño de pantalla
 
