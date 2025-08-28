@@ -721,15 +721,9 @@ const CheckIn = (() => {
                 console.log('[CheckIn] ✅ Status updated to pending/required');
                 console.log('[CheckIn] Status HTML:', statusElement.innerHTML.substring(0, 100) + '...');
             } else {
-                statusElement.innerHTML = `
-                    <div class="inline-flex items-center px-3 py-1 rounded-full text-sm bg-green-100 text-green-800">
-                        <span class="mr-1">✅</span>
-                        <span class="hidden sm:inline">Check-in</span>
-                        completado
-                    </div>
-                `;
-                console.log('[CheckIn] ✅ Status updated to completed');
-                console.log('[CheckIn] Status HTML:', statusElement.innerHTML.substring(0, 100) + '...');
+                // Status indicator removed to avoid duplicate "Check-in completado" message
+                statusElement.innerHTML = '';
+                console.log('[CheckIn] ✅ Status cleared - no duplicate message');
             }
         } else {
             console.error('[CheckIn] ❌ Could not find or create status indicator element');

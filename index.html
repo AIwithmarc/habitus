@@ -154,6 +154,74 @@
             right: max(1.5rem, env(safe-area-inset-right) + 1rem);
         }
     }
+
+    /* Mobile bottom navigation styles */
+    .mobile-bottom-nav {
+        display: none;
+    }
+
+    @media (max-width: 768px) {
+        .mobile-bottom-nav {
+            display: flex;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            border-top: 1px solid #e5e7eb;
+            padding: 0.5rem 0;
+            z-index: 40;
+            box-shadow: 0 -4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .mobile-bottom-nav .nav-item {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 0.5rem;
+            color: #6b7280;
+            text-decoration: none;
+            font-size: 0.75rem;
+            transition: all 0.2s ease;
+            min-height: 60px;
+            justify-content: center;
+        }
+
+        .mobile-bottom-nav .nav-item.active {
+            color: #4f46e5;
+        }
+
+        .mobile-bottom-nav .nav-item:hover {
+            color: #4f46e5;
+            background-color: #f3f4f6;
+        }
+
+        .mobile-bottom-nav .nav-icon {
+            font-size: 1.25rem;
+            margin-bottom: 0.25rem;
+        }
+
+        /* Add bottom padding to body to account for fixed navigation */
+        body {
+            padding-bottom: 80px;
+        }
+
+        /* Hide desktop tabs on mobile */
+        .desktop-tabs {
+            display: none;
+        }
+    }
+
+    @media (min-width: 769px) {
+        .mobile-bottom-nav {
+            display: none;
+        }
+        
+        .desktop-tabs {
+            display: flex;
+        }
+    }
 </style>
 <link rel="stylesheet" href="styles.css">
 <link href="./icons/icon-192x192.png" rel="icon" type="image/png"/></head>
@@ -192,6 +260,20 @@ function showRandomVerse() {
 
 // Show random verse when page loads
 document.addEventListener('DOMContentLoaded', showRandomVerse);
+
+// Toggle instructions function
+function toggleInstructions() {
+    const toggle = document.getElementById('instructionsToggle');
+    const content = document.getElementById('instructionsContent');
+    
+    if (content.classList.contains('hidden')) {
+        content.classList.remove('hidden');
+        toggle.textContent = '▼';
+    } else {
+        content.classList.add('hidden');
+        toggle.textContent = '▶';
+    }
+}
 </script>
 
 <!-- Recuadro de instrucciones - Colapsable en móvil -->
@@ -221,11 +303,11 @@ document.addEventListener('DOMContentLoaded', showRandomVerse);
 </ul>
 </div>
 </div>
+
 <!-- Sistema de Pestañas Principales -->
 <div class="mb-6">
-    <!-- Pestañas Principales -->
-    <div class="bg-white rounded-lg shadow-sm p-4 mb-6">
-        <h2 class="text-lg font-semibold text-gray-800 mb-4 text-center">🎯 Planificador Habitus</h2>
+    <!-- Pestañas Principales - Desktop -->
+    <div class="bg-white rounded-lg shadow-sm p-4 mb-6 desktop-tabs">
         <div class="flex border-b border-gray-300 mb-4">
             <button class="tab-main active px-6 py-3 text-sm font-medium text-gray-700 border-b-2 border-indigo-500 touch-manipulation" data-tab="roles">
                 🎭 Roles
@@ -235,6 +317,9 @@ document.addEventListener('DOMContentLoaded', showRandomVerse);
             </button>
             <button class="tab-main px-6 py-3 text-sm font-medium text-gray-600 hover:text-gray-800 border-b-2 border-transparent touch-manipulation" data-tab="tasks">
                 📝 Tareas
+            </button>
+            <button class="tab-main px-6 py-3 text-sm font-medium text-gray-600 hover:text-gray-800 border-b-2 border-transparent touch-manipulation" data-tab="dashboard">
+                📊 Dashboard
             </button>
             <button class="tab-main px-6 py-3 text-sm font-medium text-gray-600 hover:text-gray-800 border-b-2 border-transparent touch-manipulation" data-tab="checkin">
                 ✅ Check-in
@@ -258,7 +343,7 @@ document.addEventListener('DOMContentLoaded', showRandomVerse);
             <button onclick="testGoalsModule()" class="bg-purple-500 text-white px-3 py-1 rounded text-xs hover:bg-purple-600">
                 🎯 Test Goals
             </button>
-            <button onclick="testTasksModule()" class="bg-orange-500 text-white px-3 py-1 rounded text-xs hover:bg-orange-600">
+            <button onclick="testTasksModule()" class="bg-orange-500 text-white px-3 py-2 rounded text-xs hover:bg-orange-600">
                 📝 Test Tasks
             </button>
             <button onclick="forceRenderAll()" class="bg-red-500 text-white px-3 py-1 rounded text-xs hover:bg-red-600">
@@ -368,217 +453,180 @@ document.addEventListener('DOMContentLoaded', showRandomVerse);
 <div class="mb-6 hidden overflow-x-hidden" id="tasksGoalsView"></div>
 <div class="mb-6 hidden overflow-x-hidden" id="quadrantsView"></div>
 </div>
-<!-- Panel de Productividad - Compacto y Valioso -->
-<div class="mb-6 bg-white p-4 rounded-lg shadow-sm">
-<h2 class="text-lg font-semibold mb-4 flex items-center">
-    <span class="mr-2">🎯</span>
-    Panel de Productividad
-</h2>
 
-<!-- Vista rápida de estado actual -->
-<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
-    <div class="bg-blue-50 p-3 rounded-lg text-center">
-        <div class="text-xl font-bold text-blue-600" id="totalTasks">0</div>
-        <div class="text-xs text-blue-700">Tareas</div>
-    </div>
-    <div class="bg-green-50 p-3 rounded-lg text-center">
-        <div class="text-xl font-bold text-green-600" id="completionPercentage">0%</div>
-        <div class="text-xs text-green-700">Completado</div>
-    </div>
-    <div class="bg-purple-50 p-3 rounded-lg text-center">
-        <div class="text-xl font-bold text-purple-600" id="activeRoles">0</div>
-        <div class="text-xs text-purple-700">Roles</div>
-    </div>
-    <div class="bg-orange-50 p-3 rounded-lg text-center">
-        <div class="text-xl font-bold text-orange-600" id="focusQuadrant">Q2</div>
-        <div class="text-xs text-orange-700">Enfoque</div>
-    </div>
-</div>
-
-<!-- Matrix de Eisenhower - Compacta -->
-<div class="bg-gray-50 p-3 rounded-lg mb-4">
-    <h3 class="text-sm font-medium text-gray-700 mb-2 text-center">📊 Distribución Eisenhower</h3>
-    <div class="grid grid-cols-2 gap-2">
-        <div class="bg-red-100 p-2 rounded text-center">
-            <div class="text-lg font-bold text-red-600" id="q1Count">0</div>
-            <div class="text-xs text-red-700">Crisis (Q1)</div>
-        </div>
-        <div class="bg-blue-100 p-2 rounded text-center">
-            <div class="text-lg font-bold text-blue-600" id="q2Count">0</div>
-            <div class="text-xs text-blue-700">Importante (Q2)</div>
-        </div>
-        <div class="bg-yellow-100 p-2 rounded text-center">
-            <div class="text-lg font-bold text-yellow-600" id="q3Count">0</div>
-            <div class="text-xs text-yellow-700">Urgente (Q3)</div>
-        </div>
-        <div class="bg-gray-100 p-2 rounded text-center">
-            <div class="text-lg font-bold text-gray-600" id="q4Count">0</div>
-            <div class="text-xs text-gray-700">Pérdidas (Q4)</div>
-        </div>
-    </div>
-</div>
-
-<!-- Insights dinámicos -->
-<div id="productivityInsights" class="bg-gradient-to-r from-indigo-50 to-purple-50 p-3 rounded-lg">
-    <h3 class="text-sm font-medium text-indigo-800 mb-2 flex items-center">
-        <span class="mr-1">🧠</span>
-        Insights de Productividad
-    </h3>
-    <div class="text-xs text-indigo-700">Analizando patrones...</div>
-</div>
-</div>
-<!-- Pestaña: Check-in -->
-<div class="tab-content hidden" data-tab="checkin">
-    <h2 class="text-xl font-semibold mb-2 no-select">✅ Check-in Semanal</h2>
-    <p class="text-sm text-gray-600 mb-3">Reflexiona sobre tu semana y planifica la siguiente. Este paso es obligatorio cuando ha pasado una semana.</p>
-    
-    <!-- Formulario de check-in -->
-    <div class="mb-4">
-        <div class="bg-indigo-50 border border-indigo-200 rounded-lg p-4">
-            <h3 class="font-semibold text-indigo-800 flex items-center mb-2">
+    <!-- Pestaña: Dashboard -->
+    <div class="tab-content hidden" data-tab="dashboard">
+        <h2 class="text-xl font-semibold mb-2 no-select">📊 Dashboard</h2>
+        <p class="text-sm text-gray-600 mb-3">Vista general de tu productividad y métricas semanales.</p>
+        
+        <!-- Panel de Productividad - Compacto y Valioso -->
+        <div class="mb-6 bg-white p-4 rounded-lg shadow-sm">
+            <h2 class="text-lg font-semibold mb-4 flex items-center">
                 <span class="mr-2">🎯</span>
-                <span data-i18n="checkin_section_title">Check-in Semanal</span>
-            </h3>
-            
-            <button class="bg-indigo-500 text-white text-sm font-medium px-4 py-3 rounded w-full hover:bg-indigo-600 active:bg-indigo-700 touch-manipulation" id="checkInBtn">
-                🔄 Cargando...
-            </button>
-        </div>
-    </div>
-    
-    </div>
-</div>
+                Panel de Productividad
+            </h2>
 
-<!-- Pestaña: Perhaps List -->
-<div class="tab-content hidden" data-tab="perhaps">
-    <h2 class="text-xl font-semibold mb-2 no-select">💡 Perhaps List</h2>
-    <p class="text-sm text-gray-600 mb-3">Captura ideas que podrías incluir en tu planificación. No las pierdas de vista.</p>
-    
-    <!-- Formulario para agregar ideas -->
-    <div class="mb-4">
-        <div class="bg-purple-50 border border-purple-200 rounded-lg p-4">
-            <h3 class="font-semibold text-purple-800 flex items-center mb-3">
-                <span class="mr-2">✨</span>
-                <span>Nueva Idea</span>
-            </h3>
-            <div class="flex gap-2">
-                <input class="border rounded px-3 py-2 flex-1 touch-manipulation" 
-                       id="ideaInput" 
-                       placeholder="Describe tu idea..." 
-                       type="text"/>
-                <button class="bg-purple-500 text-white px-4 py-2 rounded hover:bg-purple-600 active:bg-purple-700 touch-manipulation" 
-                        id="addIdeaBtn">
-                    ➕ Agregar
-                </button>
+            <!-- Vista rápida de estado actual -->
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
+                <div class="bg-blue-50 p-3 rounded-lg text-center">
+                    <div class="text-xl font-bold text-blue-600" id="totalTasks">0</div>
+                    <div class="text-xs text-blue-700">Tareas</div>
+                </div>
+                <div class="bg-green-50 p-3 rounded-lg text-center">
+                    <div class="text-xl font-bold text-green-600" id="completionPercentage">0%</div>
+                    <div class="text-xs text-green-700">Completado</div>
+                </div>
+                <div class="bg-purple-50 p-3 rounded-lg text-center">
+                    <div class="text-xl font-bold text-purple-600" id="activeRoles">0</div>
+                    <div class="text-xs text-purple-700">Roles</div>
+                </div>
+                <div class="bg-orange-50 p-3 rounded-lg text-center">
+                    <div class="text-xl font-bold text-orange-600" id="focusQuadrant">Q2</div>
+                    <div class="text-xs text-orange-700">Enfoque</div>
+                </div>
             </div>
-        </div>
-    </div>
-    
-    <!-- Buscador de ideas -->
-    <div class="mb-4">
-        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
-            <h3 class="font-semibold text-blue-800 flex items-center mb-3">
-                <span class="mr-2">🔍</span>
-                <span>Buscar Ideas</span>
-            </h3>
-            <input class="border rounded px-3 py-2 w-full touch-manipulation" 
-                   id="searchIdeasInput" 
-                   placeholder="Buscar en tus ideas..." 
-                   type="text"/>
-        </div>
-    </div>
-    
-    <!-- Lista de ideas -->
-    <div class="mb-4">
-        <div class="bg-white border border-gray-200 rounded-lg p-4">
-            <h3 class="font-semibold text-gray-800 flex items-center justify-between mb-3">
-                <span class="flex items-center">
-                    <span class="mr-2">📝</span>
-                    <span>Mis Ideas</span>
-                </span>
-                <div class="flex items-center space-x-4">
-                    <div class="text-sm text-gray-500">
-                        <span id="ideasCount">0</span> ideas
+
+            <!-- Matrix de Eisenhower - Compacta -->
+            <div class="bg-gray-50 p-3 rounded-lg mb-4">
+                <h3 class="text-sm font-medium text-gray-700 mb-2 text-center">📊 Distribución Eisenhower</h3>
+                <div class="grid grid-cols-2 gap-2">
+                    <div class="bg-red-100 p-2 rounded text-center">
+                        <div class="text-lg font-bold text-red-600" id="q1Count">0</div>
+                        <div class="text-xs text-red-700">Crisis (Q1)</div>
                     </div>
-                    <div class="flex space-x-2">
-                        <button onclick="Perhaps.toggleImplementedView()" 
-                                id="toggleImplementedBtn"
-                                class="bg-green-200 text-green-700 px-3 py-1 rounded text-xs hover:bg-green-300 active:bg-green-400 touch-manipulation">
-                            ✅ Ver Implementadas
-                        </button>
-                        <button onclick="Perhaps.toggleArchivedView()" 
-                                id="toggleArchivedBtn"
-                                class="bg-gray-200 text-gray-700 px-3 py-1 rounded text-xs hover:bg-gray-300 active:bg-gray-400 touch-manipulation">
-                            📁 Ver Archivadas
-                        </button>
+                    <div class="bg-blue-100 p-2 rounded text-center">
+                        <div class="text-lg font-bold text-blue-600" id="q2Count">0</div>
+                        <div class="text-xs text-blue-700">Importante (Q2)</div>
+                    </div>
+                    <div class="bg-yellow-100 p-2 rounded text-center">
+                        <div class="text-lg font-bold text-yellow-600" id="q3Count">0</div>
+                        <div class="text-xs text-yellow-700">Urgente (Q3)</div>
+                    </div>
+                    <div class="bg-gray-100 p-2 rounded text-center">
+                        <div class="text-lg font-bold text-gray-600" id="q4Count">0</div>
+                        <div class="text-xs text-gray-700">Pérdidas (Q4)</div>
                     </div>
                 </div>
-            </h3>
-            <div id="ideasList" class="space-y-3">
-                <!-- Las ideas se renderizarán dinámicamente aquí -->
             </div>
-        </div>
-    </div>
-    
-    <!-- Botones de Debug para Perhaps List -->
-    <div class="mb-4">
-        <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-            <h3 class="font-semibold text-yellow-800 flex items-center mb-3">
-                <span class="mr-2">🐛</span>
-                <span>Debug Perhaps List</span>
-            </h3>
-            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                <button onclick="PerhapsDebug.testAddIdea()" 
-                        class="bg-blue-500 text-white px-3 py-2 rounded text-xs hover:bg-blue-600 active:bg-blue-700 touch-manipulation">
-                    ➕ Test Idea
-                </button>
-                <button onclick="PerhapsDebug.testConvertToGoal()" 
-                        class="bg-green-500 text-white px-3 py-2 rounded text-xs hover:bg-green-600 active:bg-green-700 touch-manipulation">
-                    🎯 Test Meta
-                </button>
-                <button onclick="PerhapsDebug.testConvertToTask()" 
-                        class="bg-purple-500 text-white px-3 py-2 rounded text-xs hover:bg-purple-600 active:bg-purple-700 touch-manipulation">
-                    📝 Test Tarea
-                </button>
-                <button onclick="PerhapsDebug.testArchiveIdea()" 
-                        class="bg-gray-500 text-white px-3 py-2 rounded text-xs hover:bg-gray-600 active:bg-gray-700 touch-manipulation">
-                    📁 Test Archivar
-                </button>
-                <button onclick="PerhapsDebug.showIdeasData()" 
-                        class="bg-indigo-500 text-white px-3 py-2 rounded text-xs hover:bg-indigo-600 active:bg-indigo-700 touch-manipulation">
-                    📊 Ver Datos
-                </button>
-                <button onclick="PerhapsDebug.clearAllIdeas()" 
-                        class="bg-red-500 text-white px-3 py-2 rounded text-xs hover:bg-red-600 active:bg-red-700 touch-manipulation">
-                    🗑️ Limpiar
-                </button>
-                <button onclick="PerhapsDebug.testModules()" 
-                        class="bg-orange-500 text-white px-3 py-2 rounded text-xs hover:bg-orange-600 active:bg-orange-700 touch-manipulation">
-                    🔧 Test Módulos
-                </button>
-                <button onclick="PerhapsDebug.forceRender()" 
-                        class="bg-teal-500 text-white px-3 py-2 rounded text-xs hover:bg-teal-600 active:bg-teal-700 touch-manipulation">
-                    🚀 Forzar Render
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
 
-<!-- Información adicional del check-in -->
-<div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
-    <h3 class="font-semibold text-blue-800 flex items-center mb-2">
-        <span class="mr-2">📊</span>
-        <span>Información del Check-in</span>
-    </h3>
-    <p class="text-sm text-blue-600 mb-2">
-        El check-in semanal te permite reflexionar sobre tus logros, desafíos y aprendizajes de la semana anterior.
-    </p>
-    <ul class="text-sm text-blue-700 space-y-1">
-        <li>• <strong>Obligatorio:</strong> Se requiere cada semana para mantener la continuidad</li>
-        <li>• <strong>Reflexión:</strong> Evalúa tu productividad y planifica mejoras</li>
-        <li>• <strong>Nueva Semana:</strong> Solo las tareas completadas se remueven</li>
-    </ul>
+            <!-- Insights dinámicos -->
+            <div id="productivityInsights" class="bg-gradient-to-r from-indigo-50 to-purple-50 p-3 rounded-lg">
+                <h3 class="text-sm font-medium text-indigo-800 mb-2 flex items-center">
+                    <span class="mr-1">🧠</span>
+                    Insights de Productividad
+                </h3>
+                <div class="text-xs text-indigo-700">Analizando patrones...</div>
+            </div>
+        </div>
+
+        <!-- Información del Check-in -->
+        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+            <h3 class="font-semibold text-blue-800 flex items-center mb-2">
+                <span class="mr-2">📊</span>
+                <span>Información del Check-in</span>
+            </h3>
+            <p class="text-sm text-blue-600 mb-2">
+                El check-in semanal te permite reflexionar sobre tus logros, desafíos y aprendizajes de la semana anterior.
+            </p>
+            <ul class="text-sm text-blue-700 space-y-1">
+                <li>• <strong>Obligatorio:</strong> Se requiere cada semana para mantener la continuidad</li>
+                <li>• <strong>Reflexión:</strong> Evalúa tu productividad y planifica mejoras</li>
+                <li>• <strong>Nueva Semana:</strong> Solo las tareas completadas se remueven</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Pestaña: Check-in -->
+    <div class="tab-content hidden" data-tab="checkin">
+        <h2 class="text-xl font-semibold mb-2 no-select">✅ Check-in Semanal</h2>
+        <p class="text-sm text-gray-600 mb-3">Reflexiona sobre tu semana y planifica la siguiente. Este paso es obligatorio cuando ha pasado una semana.</p>
+        
+        <!-- Formulario de check-in -->
+        <div class="mb-4">
+            <div class="bg-indigo-50 border border-indigo-200 rounded-lg p-4">
+                <h3 class="font-semibold text-indigo-800 flex items-center mb-2">
+                    <span class="mr-2">🎯</span>
+                    <span data-i18n="checkin_section_title">Check-in Semanal</span>
+                </h3>
+                
+                <button class="bg-indigo-500 text-white text-sm font-medium px-4 py-3 rounded w-full hover:bg-indigo-600 active:bg-indigo-700 touch-manipulation" id="checkInBtn">
+                    🔄 Cargando...
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pestaña: Perhaps List -->
+    <div class="tab-content hidden" data-tab="perhaps">
+        <h2 class="text-xl font-semibold mb-2 no-select">💡 Perhaps List</h2>
+        <p class="text-sm text-gray-600 mb-3">Captura ideas que podrías incluir en tu planificación. No las pierdas de vista.</p>
+        
+        <!-- Formulario para agregar ideas -->
+        <div class="mb-4">
+            <div class="bg-purple-50 border border-purple-200 rounded-lg p-4">
+                <h3 class="font-semibold text-purple-800 flex items-center mb-3">
+                    <span class="mr-2">✨</span>
+                    <span>Nueva Idea</span>
+                </h3>
+                <div class="flex gap-2">
+                    <input class="border rounded px-3 py-2 flex-1 touch-manipulation" 
+                           id="ideaInput" 
+                           placeholder="Describe tu idea..." 
+                           type="text"/>
+                    <button class="bg-purple-500 text-white px-4 py-2 rounded hover:bg-purple-600 active:bg-purple-700 touch-manipulation" 
+                            id="addIdeaBtn">
+                        ➕ Agregar
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Buscador de ideas -->
+        <div class="mb-4">
+            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <h3 class="font-semibold text-blue-800 flex items-center mb-3">
+                    <span class="mr-2">🔍</span>
+                    <span>Buscar Ideas</span>
+                </h3>
+                <input class="border rounded px-3 py-2 w-full touch-manipulation" 
+                       id="searchIdeasInput" 
+                       placeholder="Buscar en tus ideas..." 
+                       type="text"/>
+            </div>
+        </div>
+        
+        <!-- Lista de ideas -->
+        <div class="mb-4">
+            <div class="bg-white border border-gray-200 rounded-lg p-4">
+                <h3 class="font-semibold text-gray-800 flex items-center justify-between mb-3">
+                    <span class="flex items-center">
+                        <span class="mr-2">📝</span>
+                        <span>Mis Ideas</span>
+                    </span>
+                    <div class="flex items-center space-x-4">
+                        <div class="text-sm text-gray-500">
+                            <span id="ideasCount">0</span> ideas
+                        </div>
+                        <div class="flex space-x-2">
+                            <button onclick="Perhaps.toggleImplementedView()" 
+                                    id="toggleImplementedBtn"
+                                    class="bg-green-200 text-green-700 px-3 py-1 rounded text-xs hover:bg-green-300 active:bg-green-400 touch-manipulation">
+                                ✅ Ver Implementadas
+                            </button>
+                            <button onclick="Perhaps.toggleArchivedView()" 
+                                    id="toggleArchivedBtn"
+                                    class="bg-gray-200 text-gray-700 px-3 py-1 rounded text-xs hover:bg-gray-300 active:bg-gray-400 touch-manipulation">
+                                📁 Ver Archivadas
+                            </button>
+                        </div>
+                    </div>
+                </h3>
+                <div id="ideasList" class="space-y-3">
+                    <!-- Las ideas se renderizarán dinámicamente aquí -->
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <!-- Botones de migración de datos -->
@@ -601,6 +649,34 @@ document.addEventListener('DOMContentLoaded', showRandomVerse);
     Exporta todos tus datos para migrar a otro dispositivo o crear un respaldo completo.
 </p>
 </div>
+
+<!-- Mobile Bottom Navigation -->
+<nav class="mobile-bottom-nav">
+    <a href="#" class="nav-item active" data-tab="roles">
+        <div class="nav-icon">🎭</div>
+        <span>Roles</span>
+    </a>
+    <a href="#" class="nav-item" data-tab="goals">
+        <div class="nav-icon">🎯</div>
+        <span>Metas</span>
+    </a>
+    <a href="#" class="nav-item" data-tab="tasks">
+        <div class="nav-icon">📝</div>
+        <span>Tareas</span>
+    </a>
+    <a href="#" class="nav-item" data-tab="dashboard">
+        <div class="nav-icon">📊</div>
+        <span>Dashboard</span>
+    </a>
+    <a href="#" class="nav-item" data-tab="checkin">
+        <div class="nav-icon">✅</div>
+        <span>Check-in</span>
+    </a>
+    <a href="#" class="nav-item" data-tab="perhaps">
+        <div class="nav-icon">💡</div>
+        <span>Ideas</span>
+    </a>
+</nav>
 
 <!-- Add floating feedback button -->
 <button id="feedbackBubble" 
@@ -722,6 +798,9 @@ async function initApp() {
         // Set up migration buttons
         document.getElementById('exportCompleteBtn')?.addEventListener('click', Migration.exportCompleteData);
         document.getElementById('importDataBtn')?.addEventListener('click', Migration.handleImportFile);
+        
+        // Setup mobile navigation
+        setupMobileNavigation();
         
         // Migrate existing tasks to include goals if needed
         if (Migration && Migration.migrateTasksToGoals) {
@@ -1335,48 +1414,10 @@ function setupTabNavigation() {
                 const tabName = tab.dataset.tab;
                 console.log('[DEBUG] Tab clicked:', tabName);
                 
-                // FIRST: Update tab indicators (remove active from all, add to clicked)
-                tabs.forEach(t => {
-                    t.classList.remove('active');
-                    t.classList.remove('border-indigo-500', 'text-gray-700');
-                    t.classList.add('border-transparent', 'text-gray-600');
-                });
+                // Use unified tab switching function
+                switchToTab(tabName);
                 
-                // Add active state to clicked tab
-                tab.classList.add('active');
-                tab.classList.add('border-indigo-500', 'text-gray-700');
-                tab.classList.remove('border-transparent', 'text-gray-600');
-                
-                // SECOND: Hide all content (but preserve it)
-                tabContents.forEach(content => {
-                    if (content.dataset.tab === tabName) {
-                        // Show this content
-                        content.classList.remove('hidden');
-                        content.classList.add('active');
-                        console.log(`[DEBUG] Showing content for: ${tabName}`);
-                    } else {
-                        // Hide other content
-                        content.classList.add('hidden');
-                        content.classList.remove('active');
-                        console.log(`[DEBUG] Hiding content for: ${content.dataset.tab}`);
-                    }
-                });
-                
-                // THIRD: Check if content needs rendering
-                const targetContent = document.querySelector(`[data-tab="${tabName}"]`);
-                if (targetContent) {
-                    console.log('[DEBUG] Content visibility set for:', tabName);
-                    
-                    // Force render content for this tab if it's empty
-                    if (targetContent.innerHTML.trim().length === 0) {
-                        console.log(`[DEBUG] Tab ${tabName} is empty, forcing render...`);
-                        forceTabContent(tabName);
-                    }
-                }
-                
-                console.log('[DEBUG] Tab switch complete for:', tabName);
-                
-                // Ensure tab state is consistent and force content render
+                // Force content render if needed
                 setTimeout(() => {
                     fixTabState();
                     forceTabContent(tabName);
@@ -2187,6 +2228,75 @@ function forceTabContent(tabName) {
     console.log(`[DEBUG] === END FORCE CONTENT FOR ${tabName} ===`);
 }
 
+// Setup mobile bottom navigation
+function setupMobileNavigation() {
+    const mobileNavItems = document.querySelectorAll('.mobile-bottom-nav .nav-item');
+    
+    mobileNavItems.forEach(item => {
+        item.addEventListener('click', (e) => {
+            e.preventDefault();
+            const tabName = item.dataset.tab;
+            
+            // Update mobile nav active state
+            mobileNavItems.forEach(navItem => navItem.classList.remove('active'));
+            item.classList.add('active');
+            
+            // Switch to the corresponding tab
+            switchToTab(tabName);
+        });
+    });
+}
+
+// Unified tab switching function
+function switchToTab(tabName) {
+    console.log('[Navigation] Switching to tab:', tabName);
+    
+    // Update desktop tabs
+    const desktopTabs = document.querySelectorAll('.tab-main');
+    desktopTabs.forEach(tab => {
+        tab.classList.remove('active', 'border-indigo-500', 'text-gray-700');
+        tab.classList.add('border-transparent', 'text-gray-600');
+        if (tab.dataset.tab === tabName) {
+            tab.classList.add('active', 'border-indigo-500', 'text-gray-700');
+            tab.classList.remove('border-transparent', 'text-gray-600');
+        }
+    });
+    
+    // Update mobile nav
+    const mobileNavItems = document.querySelectorAll('.mobile-bottom-nav .nav-item');
+    mobileNavItems.forEach(navItem => {
+        navItem.classList.remove('active');
+        if (navItem.dataset.tab === tabName) {
+            navItem.classList.add('active');
+        }
+    });
+    
+    // Show/hide content
+    const tabContents = document.querySelectorAll('.tab-content');
+    tabContents.forEach(content => {
+        if (content.dataset.tab === tabName) {
+            content.classList.remove('hidden');
+            content.classList.add('active');
+        } else {
+            content.classList.add('hidden');
+            content.classList.remove('active');
+        }
+    });
+    
+    // Force content render if needed
+    setTimeout(() => {
+        if (window.Tasks && window.Tasks.updateUI) {
+            window.Tasks.updateUI();
+        }
+        if (window.Goals && window.Goals.renderGoalsView) {
+            window.Goals.renderGoalsView();
+        }
+        if (window.CheckIn && window.CheckIn.forceUIUpdate) {
+            window.CheckIn.forceUIUpdate();
+        }
+    }, 100);
+}
+
 // Make functions globally available
 window.setupTabNavigation = setupTabNavigation;
 window.testTabNavigation = testTabNavigation;
@@ -2206,4 +2316,6 @@ window.forceUpdateGoalOptions = forceUpdateGoalOptions;
 window.testCompleteGoalFlow = testCompleteGoalFlow;
 window.debugDefaultGoals = debugDefaultGoals;
 window.verifyModules = verifyModules;
+window.setupMobileNavigation = setupMobileNavigation;
+window.switchToTab = switchToTab;
 </script>

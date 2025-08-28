@@ -602,4 +602,130 @@ body.dragging {
         min-width: 16px;
         margin-right: 8px;
     }
+}
+
+/* Mobile bottom navigation enhancements */
+.mobile-bottom-nav {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border-top: 1px solid rgba(229, 231, 235, 0.8);
+}
+
+.mobile-bottom-nav .nav-item {
+    position: relative;
+    overflow: hidden;
+}
+
+.mobile-bottom-nav .nav-item::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, rgba(79, 70, 229, 0.1), rgba(147, 51, 234, 0.1));
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+.mobile-bottom-nav .nav-item.active::before {
+    opacity: 1;
+}
+
+.mobile-bottom-nav .nav-item.active .nav-icon {
+    transform: scale(1.1);
+}
+
+.mobile-bottom-nav .nav-icon {
+    transition: transform 0.2s ease;
+}
+
+/* Safe area support for modern devices */
+@supports (padding: max(0px)) {
+    .mobile-bottom-nav {
+        padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
+    }
+    
+    body {
+        padding-bottom: max(80px, env(safe-area-inset-bottom) + 80px);
+    }
+}
+
+/* Enhanced mobile experience */
+@media (max-width: 768px) {
+    /* Improve touch targets */
+    button, input, select, textarea {
+        min-height: 44px;
+    }
+    
+    /* Better spacing for mobile */
+    .space-y-4 > * + * {
+        margin-top: 1rem;
+    }
+    
+    .space-y-6 > * + * {
+        margin-top: 1.5rem;
+    }
+    
+    /* Optimize grid layouts for mobile */
+    .grid-cols-2 {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.75rem;
+    }
+    
+    .grid-cols-4 {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.75rem;
+    }
+    
+    /* Improve form layouts */
+    .flex.gap-2 {
+        gap: 0.5rem;
+    }
+    
+    /* Better button sizing */
+    .px-4.py-2 {
+        padding: 0.75rem 1rem;
+    }
+    
+    /* Optimize text sizes */
+    .text-sm {
+        font-size: 0.875rem;
+        line-height: 1.25rem;
+    }
+    
+    .text-xs {
+        font-size: 0.75rem;
+        line-height: 1rem;
+    }
+}
+
+/* Smooth animations for tab transitions */
+.tab-content {
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Enhanced focus states for accessibility */
+.mobile-bottom-nav .nav-item:focus {
+    outline: 2px solid #4f46e5;
+    outline-offset: 2px;
+}
+
+/* Hover effects for desktop */
+@media (hover: hover) {
+    .mobile-bottom-nav .nav-item:hover {
+        background-color: rgba(79, 70, 229, 0.05);
+    }
 } 
