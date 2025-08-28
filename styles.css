@@ -617,7 +617,7 @@ body.dragging {
     }
 }
 
-/* PC View Optimizations - Revolut Style */
+/* PC View Optimizations - Desktop Style */
 @media (min-width: 1024px) {
     body {
         background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
@@ -772,5 +772,70 @@ body.dragging {
         width: 3rem;
         height: 3rem;
         font-size: 1.125rem;
+    }
+}
+
+/* Mobile Bottom Navigation Styles (Mobile Style) */
+.mobile-bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: white;
+    border-top: 1px solid #e5e7eb;
+    padding: 0.5rem 0;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    z-index: 40;
+    box-shadow: 0 -4px 6px -1px rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+}
+
+.mobile-bottom-nav .nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-decoration: none;
+    color: #6b7280;
+    transition: all 0.2s ease;
+    padding: 0.5rem;
+    border-radius: 0.5rem;
+    min-width: 4rem;
+}
+
+.mobile-bottom-nav .nav-item:hover {
+    color: #4f46e5;
+    background-color: #f3f4f6;
+}
+
+.mobile-bottom-nav .nav-item.active {
+    color: #4f46e5;
+    background-color: #eef2ff;
+}
+
+.mobile-bottom-nav .nav-icon {
+    font-size: 1.5rem;
+    margin-bottom: 0.25rem;
+}
+
+.mobile-bottom-nav .nav-text {
+    font-size: 0.75rem;
+    font-weight: 500;
+    text-align: center;
+}
+
+/* Add padding to body to prevent content from being hidden behind mobile navigation */
+@media (max-width: 1023px) {
+    body {
+        padding-bottom: 5rem;
+    }
+}
+
+/* Hide desktop tabs on mobile */
+@media (max-width: 1023px) {
+    .desktop-tabs {
+        display: none;
     }
 } 

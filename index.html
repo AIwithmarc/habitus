@@ -676,8 +676,8 @@ function toggleInstructions() {
 
 <!-- Sistema de Pestañas Principales -->
 <div class="mb-6">
-    <!-- Pestañas Principales -->
-    <div class="bg-white rounded-lg shadow-sm p-4 mb-6 max-w-4xl mx-auto">
+    <!-- Pestañas Principales (Desktop Only) -->
+    <div class="bg-white rounded-lg shadow-sm p-4 mb-6 max-w-4xl mx-auto desktop-tabs">
         <div class="flex border-b border-gray-300 mb-4">
             <button class="tab-main active px-6 py-3 text-sm font-medium text-gray-700 border-b-2 border-indigo-500 touch-manipulation" data-tab="roles">
                 👤 Roles
@@ -923,6 +923,30 @@ function toggleInstructions() {
 
 
 
+
+<!-- Mobile Bottom Navigation (Mobile Style) -->
+<nav class="mobile-bottom-nav lg:hidden">
+    <a href="#" class="nav-item active" data-tab="roles">
+        <div class="nav-icon">👤</div>
+        <span class="nav-text">Roles</span>
+    </a>
+    <a href="#" class="nav-item" data-tab="goals">
+        <div class="nav-icon">🎯</div>
+        <span class="nav-text">Metas</span>
+    </a>
+    <a href="#" class="nav-item" data-tab="tasks">
+        <div class="nav-icon">📝</div>
+        <span class="nav-text">Tareas</span>
+    </a>
+    <a href="#" class="nav-item" data-tab="checkin">
+        <div class="nav-icon">✅</div>
+        <span class="nav-text">Check-in</span>
+    </a>
+    <a href="#" class="nav-item" data-tab="perhaps">
+        <div class="nav-icon">💡</div>
+        <span class="nav-text">Ideas</span>
+    </a>
+</nav>
 
 <!-- Add floating feedback button -->
 <button id="feedbackBubble" 
@@ -1537,6 +1561,11 @@ async function initApp() {
                 console.log('%c⚠️ If commands don\'t work: Press Ctrl+Shift+R to hard refresh', 'background: yellow; color: black; padding: 5px;');
             }
         }, 2500);
+        
+        // Initialize mobile navigation after all modules are loaded
+        console.log('📱 Setting up mobile navigation...');
+        setupMobileNavigation();
+        console.log('✅ Mobile navigation initialized');
     } catch (error) {
         console.error('Error initializing application:', error);
     }
@@ -2486,6 +2515,163 @@ function forceTabContent(tabName) {
     console.log(`[DEBUG] === END FORCE CONTENT FOR ${tabName} ===`);
 }
 
+// Mobile Navigation Functions
+function setupMobileNavigation() {
+    console.log('📱 Setting up mobile navigation...');
+    const mobileNavItems = document.querySelectorAll('.mobile-bottom-nav .nav-item');
+    console.log('Found mobile nav items:', mobileNavItems.length);
+    
+    // First, sync mobile navigation with current active tab
+    syncMobileNavigation();
+    
+    mobileNavItems.forEach((item, index) => {
+        console.log(`Setting up item ${index}:`, item.dataset.tab);
+        item.addEventListener('click', (e) => {
+            e.preventDefault();
+            console.log('Mobile nav clicked:', item.dataset.tab);
+            
+            // Remove active class from all items
+            mobileNavItems.forEach(navItem => navItem.classList.remove('active'));
+            
+            // Add active class to clicked item
+            item.classList.add('active');
+            
+            // Get the tab name
+            const tabName = item.dataset.tab;
+            
+            // Switch to the corresponding tab
+            switchTab(tabName);
+        });
+    });
+    
+    console.log('✅ Mobile navigation setup completed');
+}
+
+function syncMobileNavigation() {
+    console.log('🔄 Syncing mobile navigation with current state...');
+    
+    // Find which tab content is currently visible
+    const tabContents = document.querySelectorAll('.tab-content');
+    let activeTab = 'roles'; // default
+    
+    tabContents.forEach(content => {
+        if (!content.classList.contains('hidden')) {
+            activeTab = content.dataset.tab;
+            console.log('Found active tab:', activeTab);
+        }
+    });
+    
+    // Update mobile navigation to match
+    const mobileNavItems = document.querySelectorAll('.mobile-bottom-nav .nav-item');
+    mobileNavItems.forEach(item => {
+        if (item.dataset.tab === activeTab) {
+            item.classList.add('active');
+            console.log('Set mobile nav active:', activeTab);
+        } else {
+            item.classList.remove('active');
+        }
+    });
+}
+
+function switchTab(tabName) {
+    console.log('🔄 Switching to tab:', tabName);
+    
+    // Debug: Log all tab contents and their data-tab attributes
+    const tabContents = document.querySelectorAll('.tab-content');
+    console.log('Found tab contents:', tabContents.length);
+    tabContents.forEach((content, index) => {
+        console.log(`Tab content ${index}:`, {
+            dataTab: content.dataset.tab,
+            classes: content.className,
+            hidden: content.classList.contains('hidden'),
+            content: content.innerHTML.substring(0, 100) + '...'
+        });
+    });
+    
+    // First, ensure ALL tab contents are completely hidden
+    tabContents.forEach(content => {
+        content.classList.add('hidden');
+        content.style.display = 'none'; // Force hide with CSS
+        content.style.visibility = 'hidden'; // Extra safety
+        console.log(`Hidden tab: ${content.dataset.tab}`);
+    });
+    
+    // Also hide any elements that might have 'active' class
+    const activeElements = document.querySelectorAll('.tab-content.active');
+    activeElements.forEach(element => {
+        element.classList.remove('active');
+        element.classList.add('hidden');
+        element.style.display = 'none';
+        element.style.visibility = 'hidden';
+        console.log(`Removed active class from: ${element.dataset.tab}`);
+    });
+    
+    // Remove active class from all desktop tabs
+    const desktopTabs = document.querySelectorAll('.tab-main');
+    desktopTabs.forEach(tab => {
+        tab.classList.remove('active', 'border-indigo-500', 'text-gray-700');
+        tab.classList.add('border-transparent', 'text-gray-600');
+    });
+    
+    // Show the selected tab content - use the correct selector
+    const targetContent = document.querySelector(`.tab-content[data-tab="${tabName}"]`);
+    
+    if (targetContent) {
+        // Ensure the target content is completely visible
+        targetContent.classList.remove('hidden');
+        targetContent.style.display = 'block'; // Force show with CSS
+        targetContent.style.visibility = 'visible'; // Ensure visibility
+        targetContent.classList.add('active'); // Mark as active
+        
+        console.log('✅ Tab content shown:', tabName, targetContent);
+        
+        // Force a reflow to ensure the change is visible
+        targetContent.offsetHeight;
+        
+        // Scroll to top to ensure content is visible
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        
+        // Double-check that only this tab is visible
+        setTimeout(() => {
+            const visibleTabs = document.querySelectorAll('.tab-content:not(.hidden)');
+            console.log('Visible tabs after switch:', visibleTabs.length);
+            visibleTabs.forEach(tab => {
+                console.log('Still visible:', tab.dataset.tab);
+            });
+        }, 100);
+    } else {
+        console.error('❌ Tab content not found for:', tabName);
+        console.log('Available tabs:', Array.from(tabContents).map(c => c.dataset.tab));
+    }
+    
+    // Update desktop tab if visible
+    const targetDesktopTab = document.querySelector(`.tab-main[data-tab="${tabName}"]`);
+    if (targetDesktopTab) {
+        targetDesktopTab.classList.add('active', 'border-indigo-500', 'text-gray-700');
+        targetDesktopTab.classList.remove('border-transparent', 'text-gray-600');
+    }
+    
+    // Update mobile navigation active state
+    const mobileNavItems = document.querySelectorAll('.mobile-bottom-nav .nav-item');
+    mobileNavItems.forEach(item => {
+        if (item.dataset.tab === tabName) {
+            item.classList.add('active');
+        } else {
+            item.classList.remove('active');
+        }
+    });
+    
+    // Force content update if needed
+    if (window.forceTabContent) {
+        window.forceTabContent(tabName);
+    }
+}
+
+// Initialize mobile navigation when DOM is loaded
+document.addEventListener('DOMContentLoaded', () => {
+    setupMobileNavigation();
+});
+
 // Make functions globally available
 window.setupTabNavigation = setupTabNavigation;
 window.testTabNavigation = testTabNavigation;
@@ -2505,4 +2691,6 @@ window.forceUpdateGoalOptions = forceUpdateGoalOptions;
 window.testCompleteGoalFlow = testCompleteGoalFlow;
 window.debugDefaultGoals = debugDefaultGoals;
 window.verifyModules = verifyModules;
+window.setupMobileNavigation = setupMobileNavigation;
+window.switchTab = switchTab;
 </script>

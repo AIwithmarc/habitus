@@ -1,12 +1,12 @@
 
-# 🎯 Habitus - Planificador Semanal v4.0.0
+# 🎯 Habitus - Planificador Semanal v4.2.2 FINAL
 
 **Organiza tu semana con claridad y propósito usando el sistema de 4 pasos de Habitus.**
 
-## 🆕 **VERSIÓN 4.0.0 - Mejoras Principales**
+## 🆕 **VERSIÓN 4.2.2 FINAL - Mejoras Principales**
 
 ### **📱 Navegación Móvil Rediseñada**
-- **Barra de navegación fija inferior** para smartphones
+- **Barra de navegación fija inferior** para smartphones (estilo móvil moderno)
 - **Navegación unificada** entre PC y móvil
 - **Tabs responsivos** que se adaptan al tamaño de pantalla
 

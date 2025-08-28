@@ -1,7 +1,7 @@
 {
-    "name": "Habitus - Planificador Semanal v4.0.0",
-    "short_name": "Habitus v4.0",
-    "description": "Organiza tu semana con claridad y propósito con Habitus v4.0. Navegación móvil mejorada, dashboard dedicado y funcionalidades optimizadas.",
+    "name": "Habitus - Planificador Semanal v4.2.2 FINAL",
+    "short_name": "Habitus v4.2.2 FINAL",
+    "description": "Organiza tu semana con claridad y propósito con Habitus v4.2.2 FINAL. Navegación móvil mejorada, dashboard dedicado y funcionalidades optimizadas.",
     "start_url": "./",
     "scope": "./",
     "display": "standalone",
