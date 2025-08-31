@@ -2035,7 +2035,10 @@ document.addEventListener('DOMContentLoaded', () => {
     setTimeout(initApp, 100);
 });
 
-// Register service worker only when running on http/https
+// Register service worker only when running on http/https - TEMPORARILY DISABLED
+console.log('ServiceWorker registration temporarily disabled for debugging');
+
+/*
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', async () => {
         // Check if we're running on http/https
@@ -2068,6 +2071,7 @@ if ('serviceWorker' in navigator) {
         }
     });
 }
+*/
 
 // Debug script to test tab functionality - IMMEDIATE EXECUTION
 console.log('[DEBUG] Script loaded, setting up tab functionality immediately...');
