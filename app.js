@@ -15,7 +15,7 @@ const App = (() => {
         quoteContainer: null
     };
 
-    // Initialize application
+        // Initialize application
     async function init() {
         try {
             console.log('Initializing App module...');
@@ -26,6 +26,31 @@ const App = (() => {
             elements.instructionsContent = document.getElementById('instructionsContent');
             elements.quoteContainer = document.getElementById('verso-contenedor');
 
+            // Load theme preference
+            loadThemePreference();
+
+            // Set up event listeners
+            setupEventListeners();
+
+            // Initialize Translations module (always needed)
+            console.log('Initializing Translations module...');
+            await Translations.init();
+            
+            // Check authentication state and wait for Supabase to be ready
+            console.log('Checking authentication state...');
+            await waitForSupabaseAuth();
+            
+            // Check if user is authenticated
+            const isAuthenticated = window.HabitusSupabase?.auth?.isAuthenticated() || false;
+            
+            if (!isAuthenticated) {
+                console.log('🔒 User not authenticated, showing auth overlay');
+                showAuthRequired();
+                return; // Stop initialization here
+            }
+            
+            console.log('✅ User is authenticated, continuing with app initialization...');
+            
             // Show initial loading state
             if (elements.quoteContainer) {
                 elements.quoteContainer.innerHTML = `
@@ -36,35 +61,13 @@ const App = (() => {
                 `;
             }
 
-            // Load theme preference
-            loadThemePreference();
-
-            // Set up event listeners
-            setupEventListeners();
-
-            // Initialize modules in sequence
-            console.log('Initializing Translations module...');
-            await Translations.init();
+            // Initialize Supabase modules first
+            console.log('Initializing Supabase modules...');
+            await initializeSupabaseModules();
             
-            console.log('Initializing Roles module...');
-            await Roles.init();
-            
-            console.log('Initializing Goals module...');
-            await Goals.init();
-            
-            // Wait a bit to ensure Goals is fully available before Tasks
-            console.log('Waiting for Goals module to be fully ready...');
-            await new Promise(resolve => setTimeout(resolve, 200));
-            
-            console.log('Initializing Tasks module...');
-            await Tasks.init();
-            
-            // Wait a bit to ensure Tasks is fully available before CheckIn
-            console.log('Waiting for Tasks module to be fully ready...');
-            await new Promise(resolve => setTimeout(resolve, 200));
-            
-            console.log('Initializing CheckIn module...');
-            await CheckIn.init();
+            // Initialize UI modules
+            console.log('Initializing UI modules...');
+            await initializeUIModules();
 
             // Show last review if exists
             showLastReview();
@@ -85,6 +88,209 @@ const App = (() => {
                     </div>
                 `;
             }
+            throw error;
+        }
+    }
+
+    // Wait for Supabase authentication to be ready
+    async function waitForSupabaseAuth() {
+        return new Promise((resolve) => {
+            function checkAuth() {
+                if (window.HabitusSupabase?.auth?.isAuthenticated !== undefined) {
+                    console.log('✅ Supabase auth is ready');
+                    resolve();
+                } else {
+                    console.log('⏳ Waiting for Supabase auth to be ready...');
+                    setTimeout(checkAuth, 500);
+                }
+            }
+            checkAuth();
+        });
+    }
+
+    // Initialize Supabase modules
+    async function initializeSupabaseModules() {
+        try {
+            // Initialize Supabase Roles
+            if (window.SupabaseRoles) {
+                console.log('Initializing Supabase Roles...');
+                await window.SupabaseRoles.init();
+            }
+            
+            // Initialize Supabase Goals
+            if (window.SupabaseGoals) {
+                console.log('Initializing Supabase Goals...');
+                await window.SupabaseGoals.init();
+            }
+            
+            // Initialize Supabase Tasks
+            if (window.SupabaseTasks) {
+                console.log('Initializing Supabase Tasks...');
+                await window.SupabaseTasks.init();
+            }
+            
+            // Initialize Supabase Check-ins
+            if (window.SupabaseCheckins) {
+                console.log('Initializing Supabase Check-ins...');
+                await window.SupabaseCheckins.init();
+            }
+            
+            // Initialize Supabase Ideas
+            if (window.SupabaseIdeas) {
+                console.log('Initializing Supabase Ideas...');
+                await window.SupabaseIdeas.init();
+            }
+            
+            console.log('✅ All Supabase modules initialized');
+        } catch (error) {
+            console.error('❌ Error initializing Supabase modules:', error);
+            throw error;
+        }
+    }
+
+    // Initialize UI modules
+    async function initializeUIModules() {
+        try {
+            // Check if all required modules are available
+            if (!window.Roles) {
+                throw new Error('Roles module is not available');
+            }
+            if (!window.Goals) {
+                throw new Error('Goals module is not available');
+            }
+            if (!window.Tasks) {
+                throw new Error('Tasks module is not available');
+            }
+            if (!window.CheckIn) {
+                throw new Error('CheckIn module is not available');
+            }
+            if (!window.Perhaps) {
+                throw new Error('Perhaps module is not available');
+            }
+            
+            console.log('Initializing Roles module...');
+            await Roles.init();
+            
+            console.log('Initializing Goals module...');
+            await Goals.init();
+            
+            // Wait a bit to ensure Goals is fully available before Tasks
+            console.log('Waiting for Goals module to be fully ready...');
+            await new Promise(resolve => setTimeout(resolve, 200));
+            
+            console.log('Initializing Tasks module...');
+            await Tasks.init();
+            
+            // Wait a bit to ensure Tasks is fully available before CheckIn
+            console.log('Waiting for Tasks module to be fully ready...');
+            await new Promise(resolve => setTimeout(resolve, 200));
+            
+            console.log('Initializing CheckIn module...');
+            await CheckIn.init();
+            
+            // Wait a bit to ensure CheckIn is fully available before Perhaps
+            console.log('Waiting for CheckIn module to be fully ready...');
+            await new Promise(resolve => setTimeout(resolve, 200));
+            
+            console.log('Initializing Perhaps module...');
+            await Perhaps.init();
+            
+            console.log('✅ All UI modules initialized');
+        } catch (error) {
+            console.error('❌ Error initializing UI modules:', error);
+            throw error;
+        }
+    }
+
+    // Show authentication required overlay
+    function showAuthRequired() {
+        const overlay = document.getElementById('authRequiredOverlay');
+        if (overlay) {
+            overlay.style.display = 'flex';
+        }
+        
+        // Update menu state
+        if (window.AuthUI && window.AuthUI.checkAuthState) {
+            window.AuthUI.checkAuthState();
+        }
+        
+        // Show auth modal if available
+        if (window.AuthUI && window.AuthUI.showModal) {
+            window.AuthUI.showModal('login');
+        }
+    }
+
+    // Check authentication state and show/hide overlay accordingly
+    function checkAuthenticationState() {
+        try {
+            // Check if user is authenticated using Supabase
+            const isAuthenticated = window.HabitusSupabase?.auth?.isAuthenticated() || false; 
+            
+            const overlay = document.getElementById('authRequiredOverlay');
+            if (overlay) {
+                if (isAuthenticated) {
+                    overlay.style.display = 'none';
+                    console.log('✅ User is authenticated, hiding auth overlay');
+                    
+                    // Initialize app if not already done
+                    if (!window.appInitialized) {
+                        window.appInitialized = true;
+                        initializeAppAfterAuth();
+                    }
+                } else {
+                    overlay.style.display = 'flex';
+                    console.log('🔒 User not authenticated, showing auth overlay');
+                }
+            }
+            
+            // Update menu state if available
+            if (window.AuthUI && window.AuthUI.checkAuthState) {
+                window.AuthUI.checkAuthState();
+            }
+        } catch (error) {
+            console.error('Error checking authentication state:', error);
+            // Show overlay by default if there's an error
+            const overlay = document.getElementById('authRequiredOverlay');
+            if (overlay) {
+                overlay.style.display = 'flex';
+            }
+        }
+    }
+
+    // Initialize app after authentication
+    async function initializeAppAfterAuth() {
+        try {
+            console.log('🔄 Initializing app after authentication...');
+            
+            // Show initial loading state
+            if (elements.quoteContainer) {
+                elements.quoteContainer.innerHTML = `
+                    <div class="bg-white rounded-lg shadow-sm p-4">
+                        <p class="text-lg font-medium text-gray-800">Cargando aplicación...</p>
+                        <p class="text-sm text-gray-600 mt-2 italic">Por favor espera...</p>
+                    </div>
+                `;
+            }
+
+            // Initialize Supabase modules first
+            console.log('Initializing Supabase modules...');
+            await initializeSupabaseModules();
+            
+            // Initialize UI modules
+            console.log('Initializing UI modules...');
+            await initializeUIModules();
+
+            // Show last review if exists
+            showLastReview();
+
+            // Show offline status if needed
+            if (!isOnline) {
+                showOfflineStatus();
+            }
+
+            console.log('✅ App initialization after auth complete');
+        } catch (error) {
+            console.error('❌ Error during app initialization after auth:', error);
             throw error;
         }
     }
@@ -454,7 +660,12 @@ const App = (() => {
         exportFeedback,
         showMainTab,
         setupMainTabNavigation,
-        debugTabState
+        debugTabState,
+        checkAuthenticationState,
+        initializeAppAfterAuth,
+        waitForSupabaseAuth,
+        initializeSupabaseModules,
+        initializeUIModules
     };
 })();
 

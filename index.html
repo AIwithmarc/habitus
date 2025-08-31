@@ -20,9 +20,11 @@
 <meta content="yes" name="apple-mobile-web-app-capable"/>
 <meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"/>
 <title data-i18n="title">Habitus - Planificador Semanal</title>
-<!-- Cargar Tailwind CSS desde CDN -->
+    <!-- Cargar Tailwind CSS desde CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js@3"></script>
+    <!-- Cargar Supabase Client -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3"></script>
 <link href="manifest.json" rel="manifest"/>
 <link href="icons/icon-192x192.png" rel="apple-touch-icon"/>
 <style>
@@ -161,8 +163,40 @@
 
 
 <!-- Modern gradient header -->
-<div class="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-xl shadow-lg p-4 sm:p-6 mb-6">
-    <div class="flex flex-col sm:flex-row items-center justify-center space-y-3 sm:space-y-0 sm:space-x-6 relative">
+<div class="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-xl shadow-lg p-4 sm:p-6 mb-6 relative">
+    <!-- User Menu button - positioned absolutely in top left -->
+    <button id="userMenuButton" 
+            class="absolute top-4 left-4 bg-white/20 hover:bg-white/30 text-white rounded-full w-10 h-10 transition-all duration-200 hover:scale-110 active:scale-95 touch-manipulation flex items-center justify-center"
+            onclick="toggleUserMenu()"
+            title="Menú de usuario"
+            style="line-height: 1; vertical-align: top;">
+        <div id="userMenuAvatar" class="w-6 h-6 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full flex items-center justify-center text-white text-sm font-semibold leading-none"
+             style="line-height: 1; display: flex; align-items: center; justify-content: center; text-align: center; width: 100%; height: 100%;">
+            <span style="display: block; text-align: center; width: 100%;">U</span>
+        </div>
+    </button>
+    
+    <!-- Menu button - positioned absolutely in top right -->
+    <button id="menuButton" 
+            class="absolute top-4 right-4 bg-white/20 hover:bg-white/30 text-white rounded-full w-10 h-10 transition-all duration-200 hover:scale-110 active:scale-95 touch-manipulation flex items-center justify-center"
+            onclick="toggleMenu()"
+            title="Menú de opciones"
+            style="line-height: 1; vertical-align: top;">
+        <svg class="w-6 h-6 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="display: block; vertical-align: middle;">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+        </svg>
+    </button>
+    
+    <!-- Auth button - positioned in top right when not authenticated -->
+    <button id="authButton" 
+            class="absolute top-4 right-20 bg-white/20 hover:bg-white/30 text-white rounded-full px-4 py-2 transition-all duration-200 hover:scale-110 active:scale-95 touch-manipulation"
+            onclick="AuthUI.showModal('login')"
+            title="Iniciar Sesión">
+        <span class="text-sm font-medium">🔐 Iniciar Sesión</span>
+    </button>
+    
+    <!-- Main content -->
+    <div class="flex flex-col sm:flex-row items-center justify-center space-y-3 sm:space-y-0 sm:space-x-6">
         <!-- Logo container with larger white background and smaller image -->
         <div class="bg-white rounded-full p-4 sm:p-5 shadow-md">
             <img alt="Logo Habitus" 
@@ -178,16 +212,6 @@
             </h1>
             <p class="text-indigo-100 text-sm sm:text-base italic break-words" id="randomVerse" style="min-height: 2.5em;">Planificador Semanal</p>
         </div>
-        
-        <!-- Menu button - positioned absolutely in top right -->
-        <button id="menuButton" 
-                class="absolute top-0 right-0 sm:relative sm:top-auto sm:right-auto bg-white/20 hover:bg-white/30 text-white rounded-full p-2 sm:p-3 transition-all duration-200 hover:scale-110 active:scale-95 touch-manipulation"
-                onclick="toggleMenu()"
-                title="Menú de opciones">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
-            </svg>
-        </button>
     </div>
 </div>
 
@@ -247,6 +271,19 @@
                 </div>
             </button>
             
+            <!-- Supabase Migration -->
+            <button onclick="showSupabaseMigration()" class="w-full text-left p-4 rounded-lg hover:bg-gray-50 transition-colors group">
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center group-hover:bg-blue-200 transition-colors">
+                        <span class="text-blue-600 text-lg">☁️</span>
+                    </div>
+                    <div>
+                        <div class="font-medium text-gray-900">Migrar a la Nube</div>
+                        <div class="text-sm text-gray-500">Sincronizar con Supabase</div>
+                    </div>
+                </div>
+            </button>
+            
             <!-- Feedback -->
             <button onclick="showFeedback()" class="w-full text-left p-4 rounded-lg hover:bg-gray-50 transition-colors group">
                 <div class="flex items-center space-x-3">
@@ -259,6 +296,82 @@
                     </div>
                 </div>
             </button>
+        </div>
+    </div>
+</div>
+
+<!-- User Menu Modal (Left Side) -->
+<div id="userMenuModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
+    <div class="absolute left-0 top-0 h-full w-80 max-w-[90vw] bg-white shadow-2xl transform -translate-x-full transition-transform duration-300 ease-in-out">
+        <!-- User Menu Header -->
+        <div class="bg-gradient-to-r from-indigo-600 to-purple-600 p-6 text-white">
+            <div class="flex items-center justify-between">
+                <h2 class="text-xl font-semibold">Mi Cuenta</h2>
+                <button onclick="toggleUserMenu()" class="text-white hover:text-indigo-200 transition-colors">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        
+        <!-- User Profile Section -->
+        <div id="userProfileSection" class="hidden">
+            <div class="bg-gradient-to-r from-indigo-50 to-purple-50 p-6 border-b border-indigo-100">
+                <div class="flex items-center space-x-4">
+                    <div class="w-16 h-16 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full flex items-center justify-center">
+                        <span class="text-white text-xl font-semibold" id="userInitials">U</span>
+                    </div>
+                    <div class="flex-1">
+                        <div class="font-semibold text-gray-900 text-lg" id="userName">Usuario</div>
+                        <div class="text-sm text-gray-600" id="userEmail">usuario@email.com</div>
+                        <div class="text-xs text-gray-500 mt-1" id="userSince">Miembro desde 2024</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- User Menu Options -->
+            <div class="p-4 space-y-2">
+                <button onclick="AuthUI.showModal('profile')" class="w-full text-left p-4 rounded-lg hover:bg-gray-50 transition-colors group">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center group-hover:bg-blue-200 transition-colors">
+                            <span class="text-blue-600 text-lg">👤</span>
+                        </div>
+                        <div>
+                            <div class="font-medium text-gray-900">Mi Perfil</div>
+                            <div class="text-xs text-gray-500">Ver y editar información personal</div>
+                        </div>
+                    </div>
+                </button>
+                
+                <button onclick="AuthUI.handleSignOut()" class="w-full text-left p-4 rounded-lg hover:bg-red-50 transition-colors group">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center group-hover:bg-red-200 transition-colors">
+                            <span class="text-red-600 text-lg">🚪</span>
+                        </div>
+                        <div>
+                            <div class="font-medium text-red-600">Cerrar Sesión</div>
+                            <div class="text-xs text-red-500">Salir de la aplicación</div>
+                        </div>
+                    </div>
+                </button>
+            </div>
+        </div>
+        
+        <!-- Guest User Section -->
+        <div id="guestUserSection">
+            <div class="bg-gradient-to-r from-gray-50 to-blue-50 p-6 border-b border-gray-200">
+                <div class="text-center">
+                    <div class="w-16 h-16 bg-gradient-to-r from-gray-400 to-blue-400 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <span class="text-white text-xl">👤</span>
+                    </div>
+                    <div class="font-semibold text-gray-700 mb-2">Usuario Invitado</div>
+                    <div class="text-sm text-gray-600 mb-4">Inicia sesión para sincronizar tus datos</div>
+                    <button onclick="AuthUI.showModal('login')" class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-lg text-sm font-medium transition-colors">
+                        Iniciar Sesión
+                    </button>
+                </div>
+            </div>
         </div>
     </div>
 </div>
@@ -396,33 +509,32 @@
         <div class="flex-1 overflow-y-auto p-6">
             <div class="space-y-6">
                 <!-- Export Section -->
-                <div class="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-lg">
-                    <h3 class="text-lg font-semibold text-blue-800 mb-3">📤 Exportar Datos</h3>
-                    <p class="text-sm text-gray-600 mb-4">Guarda una copia de seguridad de toda tu información en Habitus.</p>
+                <div class="bg-gradient-to-r from-gray-50 to-gray-100 p-4 rounded-lg">
+                    <h3 class="text-lg font-semibold text-gray-600 mb-3">📤 Exportar Datos</h3>
+                    <p class="text-sm text-gray-500 mb-4">Funcionalidad temporalmente desactivada para mejoras.</p>
                     <div class="space-y-3">
-                        <button onclick="exportCompleteDataFromMenu()" class="w-full bg-blue-500 hover:bg-blue-600 text-white px-4 py-3 rounded-lg transition-colors flex items-center justify-center space-x-2">
-                            <span>📚</span>
-                            <span>Exportar Datos Completos</span>
+                        <button disabled class="w-full bg-gray-400 text-gray-600 px-4 py-3 rounded-lg transition-colors flex items-center justify-center space-x-2 cursor-not-allowed">
+                            <span>🚧</span>
+                            <span>Exportar Datos (JSON)</span>
                         </button>
-                        <button onclick="exportTasksFromMenu()" class="w-full bg-purple-500 hover:bg-purple-600 text-white px-4 py-3 rounded-lg transition-colors flex items-center justify-center space-x-2">
-                            <span>📝</span>
+                        <button disabled class="w-full bg-gray-400 text-gray-600 px-4 py-3 rounded-lg transition-colors flex items-center justify-center space-x-2 cursor-not-allowed">
+                            <span>🚧</span>
                             <span>Exportar Tareas Estructuradas</span>
                         </button>
                     </div>
                 </div>
                 
                 <!-- Import Section -->
-                <div class="bg-gradient-to-r from-green-50 to-emerald-50 p-4 rounded-lg">
-                    <h3 class="text-lg font-semibold text-green-800 mb-3">📥 Importar Datos</h3>
-                    <p class="text-sm text-gray-600 mb-4">Restaura tus datos desde una copia de seguridad anterior.</p>
+                <div class="bg-gradient-to-r from-gray-50 to-gray-100 p-4 rounded-lg">
+                    <h3 class="text-lg font-semibold text-gray-600 mb-3">📥 Importar Datos (JSON/CSV)</h3>
+                    <p class="text-sm text-gray-500 mb-4">Funcionalidad temporalmente desactivada para mejoras.</p>
                     <div class="space-y-3">
-                        <input type="file" id="importFile" accept=".json" class="hidden">
-                        <button onclick="importDataFromMenu()" class="w-full bg-green-500 hover:bg-green-600 text-white px-4 py-3 rounded-lg transition-colors flex items-center justify-center space-x-2">
-                            <span>📁</span>
-                            <span>Seleccionar Archivo</span>
+                        <button disabled class="w-full bg-gray-400 text-gray-600 px-4 py-3 rounded-lg transition-colors flex items-center justify-center space-x-2 cursor-not-allowed">
+                            <span>🚧</span>
+                            <span>Temporalmente Desactivado</span>
                         </button>
-                        <div id="importStatus" class="text-sm text-gray-600 text-center hidden">
-                            Archivo seleccionado: <span id="fileName"></span>
+                        <div class="text-sm text-gray-500 text-center">
+                            Esta función estará disponible próximamente.
                         </div>
                     </div>
                 </div>
@@ -566,6 +678,39 @@ function hideMenu() {
     }, 300);
 }
 
+// User Menu functions
+function toggleUserMenu() {
+    const userMenu = document.getElementById('userMenuModal');
+    const isVisible = !userMenu.classList.contains('hidden');
+    
+    if (isVisible) {
+        hideUserMenu();
+    } else {
+        showUserMenu();
+    }
+}
+
+function showUserMenu() {
+    const userMenu = document.getElementById('userMenuModal');
+    const userMenuContent = userMenu.querySelector('.transform');
+    userMenu.classList.remove('hidden');
+    
+    // Trigger animation
+    setTimeout(() => {
+        userMenuContent.classList.remove('-translate-x-full');
+    }, 10);
+}
+
+function hideUserMenu() {
+    const userMenu = document.getElementById('userMenuModal');
+    const userMenuContent = userMenu.querySelector('.transform');
+    userMenuContent.classList.add('-translate-x-full');
+    
+    setTimeout(() => {
+        userMenu.classList.add('hidden');
+    }, 300);
+}
+
 function showInstructions() {
     hideMenu();
     setTimeout(() => {
@@ -599,6 +744,165 @@ function showMigration() {
     }, 350);
 }
 
+function showSupabaseMigration() {
+    hideMenu();
+    setTimeout(() => {
+        // Check if user is authenticated
+        if (window.HabitusSupabase && window.HabitusSupabase.auth.isAuthenticated()) {
+            // Start migration
+            if (window.SupabaseMigration) {
+                window.SupabaseMigration.startMigration();
+            } else {
+                alert('Sistema de migración no disponible. Recarga la página.');
+            }
+        } else {
+            // Show auth modal first
+            if (window.AuthUI) {
+                window.AuthUI.showModal('login');
+            } else {
+                alert('Sistema de autenticación no disponible. Recarga la página.');
+            }
+        }
+    }, 350);
+}
+
+// Función para verificar autenticación antes de mostrar funcionalidades
+function checkAuthBeforeAction(action) {
+    if (window.HabitusSupabase?.authGuard?.checkAuth()) {
+        action();
+    }
+}
+
+// Funciones protegidas de navegación principal
+        function showRoles() {
+            checkAuthBeforeAction(async () => {
+                hideMenu();
+                setTimeout(async () => {
+                    // Initialize Supabase modules if needed
+                    if (window.SupabaseRoles && window.HabitusSupabase?.user) {
+                        try {
+                            await window.SupabaseRoles.init();
+                            console.log('✅ Supabase Roles initialized in showRoles');
+                        } catch (error) {
+                            console.error('❌ Failed to initialize Supabase Roles:', error);
+                        }
+                    }
+                    
+                    // Initialize the Roles module
+                    if (window.Roles && typeof window.Roles.init === 'function') {
+                        window.Roles.init();
+                        console.log('✅ Roles module initialized');
+                    }
+                    
+                    // Click the roles tab button to trigger the existing tab system
+                    const rolesTabButton = document.querySelector('[data-tab="roles"]');
+                    if (rolesTabButton) {
+                        rolesTabButton.click();
+                        console.log('✅ Clicked roles tab button');
+                    } else {
+                        console.error('❌ Roles tab button not found');
+                    }
+                }, 350);
+            });
+        }
+
+function showGoals() {
+    checkAuthBeforeAction(() => {
+        hideMenu();
+        setTimeout(() => {
+            // Click the goals tab button to trigger the existing tab system
+            const goalsTabButton = document.querySelector('[data-tab="goals"]');
+            if (goalsTabButton) {
+                goalsTabButton.click();
+                console.log('✅ Clicked goals tab button');
+            } else {
+                console.error('❌ Goals tab button not found');
+            }
+        }, 350);
+    });
+}
+
+function showTasks() {
+    checkAuthBeforeAction(() => {
+        hideMenu();
+        setTimeout(() => {
+            // Click the tasks tab button to trigger the existing tab system
+            const tasksTabButton = document.querySelector('[data-tab="tasks"]');
+            if (tasksTabButton) {
+                tasksTabButton.click();
+                console.log('✅ Clicked tasks tab button');
+            } else {
+                console.error('❌ Tasks tab button not found');
+            }
+        }, 350);
+    });
+}
+
+function showMetrics() {
+    checkAuthBeforeAction(() => {
+        hideMenu();
+        setTimeout(() => {
+            // Click the metrics tab button to trigger the existing tab system
+            const metricsTabButton = document.querySelector('[data-tab="metrics"]');
+            if (metricsTabButton) {
+                metricsTabButton.click();
+                console.log('✅ Clicked metrics tab button');
+            } else {
+                console.error('❌ Metrics tab button not found');
+            }
+        }, 350);
+    });
+}
+
+function showCheckin() {
+    checkAuthBeforeAction(() => {
+        hideMenu();
+        setTimeout(() => {
+            // Click the checkin tab button to trigger the existing tab system
+            const checkinTabButton = document.querySelector('[data-tab="checkin"]');
+            if (checkinTabButton) {
+                checkinTabButton.click();
+                console.log('✅ Clicked checkin tab button');
+            } else {
+                console.error('❌ Checkin tab button not found');
+            }
+        }, 350);
+    });
+}
+
+function showPerhaps() {
+    checkAuthBeforeAction(() => {
+        hideMenu();
+        setTimeout(() => {
+            // Click the perhaps tab button to trigger the existing tab system
+            const perhapsTabButton = document.querySelector('[data-tab="perhaps"]');
+            if (perhapsTabButton) {
+                perhapsTabButton.click();
+                console.log('✅ Clicked perhaps tab button');
+            } else {
+                console.error('❌ Perhaps tab button not found');
+            }
+        }, 350);
+    });
+}
+
+// Helper function to update tab button states
+function updateTabButtons(activeTab) {
+    // Remove active state from all tab buttons
+    const allTabButtons = document.querySelectorAll('[id^="tab"]');
+    allTabButtons.forEach(btn => {
+        btn.classList.remove('border-indigo-500', 'text-indigo-600');
+        btn.classList.add('border-transparent', 'text-gray-600');
+    });
+    
+    // Add active state to the correct tab button
+    const activeButton = document.getElementById(`tab${activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}`);
+    if (activeButton) {
+        activeButton.classList.remove('border-transparent', 'text-gray-600');
+        activeButton.classList.add('border-indigo-500', 'text-indigo-600');
+    }
+}
+
 function hideMigration() {
     document.getElementById('migrationModal').classList.add('hidden');
 }
@@ -610,51 +914,28 @@ function showFeedback() {
     }, 350);
 }
 
-// Menu migration functions that connect to main page functions
+// Menu migration functions that connect to main page functions - TEMPORARILY DISABLED
 function exportCompleteDataFromMenu() {
+    // Function temporarily disabled
     hideMenu();
     setTimeout(() => {
-        // Call the main page export function
-        if (window.Migration && window.Migration.exportCompleteData) {
-            window.Migration.exportCompleteData();
-        } else {
-            console.error('Migration module not available');
-        }
+        alert('La función de exportar datos completos está temporalmente desactivada para mejoras. Estará disponible próximamente.');
     }, 350);
 }
 
 function exportTasksFromMenu() {
+    // Function temporarily disabled
     hideMenu();
     setTimeout(() => {
-        // Call the main page export tasks function with structured data
-        if (window.Migration && window.Migration.exportTasks) {
-            window.Migration.exportTasks();
-        } else {
-            console.error('Migration module not available');
-        }
+        alert('La función de exportar tareas está temporalmente desactivada para mejoras. Estará disponible próximamente.');
     }, 350);
 }
 
 function importDataFromMenu() {
+    // Function temporarily disabled
     hideMenu();
     setTimeout(() => {
-        // Trigger the file input click
-        const importFile = document.getElementById('importFile');
-        if (importFile) {
-            importFile.click();
-            // Add event listener for file selection
-            importFile.onchange = function(event) {
-                const file = event.target.files[0];
-                if (file) {
-                    // Call the main page import function
-                    if (window.Migration && window.Migration.handleImportFile) {
-                        window.Migration.handleImportFile(file);
-                    } else {
-                        console.error('Migration module not available');
-                    }
-                }
-            };
-        }
+        alert('La función de importar datos está temporalmente desactivada para mejoras. Estará disponible próximamente.');
     }, 350);
 }
 
@@ -760,6 +1041,7 @@ function toggleInstructions() {
                 ➕ Añadir Rol
             </button>
         </div>
+
         <div class="mt-2 space-y-1" id="rolesList"><!-- Lista de roles dinámicos --></div>
     </div>
 
@@ -1020,13 +1302,27 @@ function toggleInstructions() {
 })();
 </script>
 
+<!-- Supabase CDN -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.0/dist/umd/supabase.min.js" crossorigin></script>
+
 <!-- Core application modules -->
     <script src="config.js"></script>
+    <script src="config/supabase.js"></script>
+    <script src="config/auth-config.js"></script>
+    <script src="lib/supabase-client.js"></script>
+    <script src="auth/auth-ui.js"></script>
+    <!-- Migration Module - TEMPORARILY DISABLED -->
+    <!-- <script src="migration/supabase-migration.js"></script> -->
     <script src="validator.js"></script>
-    <script src="migration.js"></script>
+    <!-- <script src="migration-final-fixed-v3.js"></script> -->
     <script src="pasajes_bilingues.js"></script>
     <script src="translations.js"></script>
     <script src="roles.js"></script>
+    <script src="lib/supabase-roles.js"></script>
+    <script src="lib/supabase-goals.js"></script>
+    <script src="lib/supabase-tasks.js"></script>
+    <script src="lib/supabase-checkins.js"></script>
+    <script src="lib/supabase-ideas.js"></script>
     <script src="goals.js"></script>
     <script src="tasks.js"></script>
     <script src="checkin.js"></script>
@@ -1057,6 +1353,33 @@ async function loadJSONData(url) {
     }
 }
 
+// Setup menu event listeners
+function setupMenuEventListeners() {
+    // Close menus when clicking outside
+    document.addEventListener('click', (e) => {
+        const menu = document.getElementById('sideMenu');
+        const menuButton = document.getElementById('menuButton');
+        const userMenu = document.getElementById('userMenuModal');
+        const userMenuButton = document.getElementById('userMenuButton');
+        
+        if (menu && !menu.classList.contains('hidden') && !menu.contains(e.target) && !menuButton.contains(e.target)) {
+            hideMenu();
+        }
+        
+        if (userMenu && !userMenu.classList.contains('hidden') && !userMenu.contains(e.target) && !userMenuButton.contains(e.target)) {
+            hideUserMenu();
+        }
+    });
+
+    // Close menus on escape key
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            hideMenu();
+            hideUserMenu();
+        }
+    });
+}
+
 // Initialize application
 async function initApp() {
     try {
@@ -1065,21 +1388,35 @@ async function initApp() {
         // Initialize App module
         await App.init();
         
+        // Migration functionality temporarily disabled
         // Set up migration buttons
-        document.getElementById('exportCompleteBtn')?.addEventListener('click', Migration.exportCompleteData);
-        document.getElementById('importDataBtn')?.addEventListener('click', Migration.handleImportFile);
+        // document.getElementById('exportCompleteBtn')?.addEventListener('click', Migration.exportCompleteDataJSON);
+        // document.getElementById('importDataBtn')?.addEventListener('click', function() {
+        //     const input = document.createElement('input');
+        //     input.type = 'file';
+        //     input.accept = '.csv,.json';
+        //     input.onchange = function(e) {
+        //         const file = e.target.files[0];
+        //         if (file && window.Migration) {
+        //             window.Migration.handleImportFile(file);
+        //         } else {
+        //             showNotification('Error al procesar archivo', 'error');
+        //         }
+        //     };
+        //     input.click();
+        // });
         
         // Migrate existing tasks to include goals if needed
-        if (Migration && Migration.migrateTasksToGoals) {
-            try {
-                const migratedCount = Migration.migrateTasksToGoals();
-                if (migratedCount > 0) {
-                    console.log(`[App] Migrated ${migratedCount} tasks to include goals`);
-                }
-            } catch (error) {
-                console.error('[App] Error during tasks migration:', error);
-            }
-        }
+        // if (Migration && Migration.migrateTasksToGoals) {
+        //     try {
+        //         const migratedCount = Migration.migrateTasksToGoals();
+        //         if (migratedCount > 0) {
+        //             console.log(`[App] Migrated ${migratedCount} tasks to include goals`);
+        //         }
+        //     } catch (error) {
+        //         console.error('[App] Error during tasks migration:', error);
+        //     }
+        // }
         
 
         
@@ -1350,7 +1687,7 @@ async function initApp() {
                 showModal: () => CheckIn?.showModal(),
                 
                 // Migration helpers
-                exportData: () => Migration?.exportCompleteData(),
+                exportData: () => Migration?.exportCompleteDataJSON(),
                 testMigrationData: () => Migration?.prepareMigrationData(),
                 getMigrationSchema: () => Migration?.getSchema(),
                 
@@ -1544,6 +1881,26 @@ async function initApp() {
         }
         
         console.log('Application initialized successfully');
+        
+        // Initialize AuthUI after app initialization
+        console.log('🔐 Initializing AuthUI...');
+        if (window.AuthUI && window.AuthUI.init) {
+            window.AuthUI.init();
+            console.log('✅ AuthUI initialized');
+            
+            // Force update user info after initialization
+            setTimeout(() => {
+                if (window.AuthUI && window.AuthUI.updateUserInfo) {
+                    window.AuthUI.updateUserInfo();
+                    console.log('✅ User info updated');
+                }
+            }, 500);
+        } else {
+            console.warn('⚠️ AuthUI not available');
+        }
+        
+        // Setup menu event listeners
+        setupMenuEventListeners();
         
         // Show final status and usage instructions
         setTimeout(() => {
@@ -2694,3 +3051,54 @@ window.verifyModules = verifyModules;
 window.setupMobileNavigation = setupMobileNavigation;
 window.switchTab = switchTab;
 </script>
+
+<!-- Authentication Required Overlay -->
+<div id="authRequiredOverlay" class="fixed inset-0 bg-gradient-to-br from-indigo-900 to-purple-900 z-40 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8 text-center">
+        <div class="mb-6">
+            <div class="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-full p-4 w-20 h-20 mx-auto mb-4 flex items-center justify-center">
+                <img src="icons/icon-192x192.png" alt="Logo" class="w-12 h-12">
+            </div>
+            <h2 class="text-2xl font-bold text-gray-800 mb-2">Bienvenido a Habitus</h2>
+            <p class="text-gray-600">Para acceder a tu planificador semanal, necesitas iniciar sesión o crear una cuenta.</p>
+        </div>
+        
+        <div class="space-y-3">
+            <button onclick="AuthUI.showModal('login')" 
+                    class="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-3 px-6 rounded-lg font-medium hover:from-indigo-700 hover:to-purple-700 transition-all duration-200 transform hover:scale-105">
+                🔐 Iniciar Sesión
+            </button>
+            <button onclick="AuthUI.showModal('register')" 
+                    class="w-full bg-gradient-to-r from-green-600 to-emerald-600 text-white py-3 px-6 rounded-lg font-medium hover:from-green-700 hover:to-emerald-700 transition-all duration-200 transform hover:scale-105">
+                ✨ Crear Cuenta
+            </button>
+        </div>
+        
+        <p class="text-xs text-gray-500 mt-4">
+            Tu información se sincroniza de forma segura en la nube
+        </p>
+    </div>
+</div>
+
+<!-- Global error handler for ResizeObserver -->
+<script>
+    // Handle ResizeObserver loop errors
+    window.addEventListener('error', function(e) {
+        if (e.message === 'ResizeObserver loop completed with undelivered notifications.') {
+            e.stopImmediatePropagation();
+            return false;
+        }
+    });
+
+    // Handle unhandled promise rejections
+    window.addEventListener('unhandledrejection', function(e) {
+        if (e.reason && e.reason.message && e.reason.message.includes('ResizeObserver')) {
+            e.preventDefault();
+            return false;
+        }
+    });
+</script>
+
+<!-- Side Menu Modal -->
+</body>
+</html>
