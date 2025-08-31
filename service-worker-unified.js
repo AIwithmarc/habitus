@@ -14,10 +14,10 @@ const CONFIG = {
     // Auto-detect base path
     BASE_PATH: (() => {
         if (typeof location !== 'undefined') {
-            const path = location.pathname;
-            return path.endsWith('/') ? path : path + '/';
+            // For Cloudflare Pages, always use root path
+            return '/';
         }
-        return '/HabitusWeeklyPlannerApp/'; // fallback
+        return '/'; // fallback
     })(),
     
     FALLBACK_TIMEOUT: 3000,
@@ -46,7 +46,9 @@ const STATIC_ASSETS = [
     'migration.js',
     'manifest.json',
     'icons/icon-192x192.png',
-    'icons/icon-512x512.png'
+    'icons/icon-512x512.png',
+    'vendor/tailwind.min.css',
+    'vendor/chart.min.js'
 ].map(asset => CONFIG.BASE_PATH + asset);
 
 // CDN fallback assets (locally stored)
@@ -161,10 +163,20 @@ async function handleFetch(request, url) {
 // Handle app requests (cache-first for static, network-first for dynamic)
 async function handleAppRequest(request, url) {
     const pathname = url.pathname;
-    const isStatic = STATIC_ASSETS.some(asset => pathname.endsWith(asset.split('/').pop()));
     
-    if (isStatic) {
-        // Cache-first for static assets
+    // Check if it's a vendor file (CSS/JS from vendor directory)
+    const isVendorFile = pathname.includes('/vendor/') || 
+                        pathname.endsWith('.css') || 
+                        pathname.endsWith('.js');
+    
+    // Check if it's a static asset
+    const isStatic = STATIC_ASSETS.some(asset => {
+        const assetName = asset.split('/').pop();
+        return pathname.endsWith(assetName) || pathname === asset;
+    });
+    
+    if (isStatic || isVendorFile) {
+        // Cache-first for static assets and vendor files
         const cached = await caches.match(request);
         if (cached) return cached;
         
