@@ -32,7 +32,7 @@ const Goals = (() => {
     ];
 
     // Initialize goals module
-    async function init() {
+    function init() {
         try {
             console.log('[Goals] Initializing module...');
             
@@ -47,10 +47,10 @@ const Goals = (() => {
             updateGoalRoleOptions();
 
             // Load saved goals
-            await loadGoals();
+            loadGoals();
 
             // Create default goals for existing roles
-            await createDefaultGoals();
+            createDefaultGoals();
 
             // Update goal options in tasks module
             if (window.Tasks && window.Tasks.updateGoalOptions) {
@@ -71,162 +71,32 @@ const Goals = (() => {
 
     // Set up event listeners
     function setupEventListeners() {
-        console.log('[Goals] Setting up event listeners...');
-        
         // Add goal button
-        if (elements.addGoalBtn) {
-            console.log('[Goals] Adding click listener to addGoalBtn');
-            elements.addGoalBtn.addEventListener('click', (e) => {
-                console.log('[Goals] Add goal button clicked');
-                e.preventDefault();
-                addGoal();
-            });
-        } else {
-            console.warn('[Goals] addGoalBtn element not found');
-        }
+        elements.addGoalBtn?.addEventListener('click', addGoal);
 
         // Goal input enter key
-        if (elements.goalInput) {
-            console.log('[Goals] Adding keypress listener to goalInput');
-            elements.goalInput.addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') {
-                    console.log('[Goals] Enter key pressed in goalInput');
-                    e.preventDefault();
-                    addGoal();
-                }
-            });
-        } else {
-            console.warn('[Goals] goalInput element not found');
-        }
+        elements.goalInput?.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                addGoal();
+            }
+        });
 
         // Role select change
-        if (elements.goalRoleSelect) {
-            console.log('[Goals] Adding change listener to goalRoleSelect');
-            elements.goalRoleSelect.addEventListener('change', updateGoalInputPlaceholder);
-        } else {
-            console.warn('[Goals] goalRoleSelect element not found');
-        }
-        
-        console.log('[Goals] Event listeners setup completed');
+        elements.goalRoleSelect?.addEventListener('change', updateGoalInputPlaceholder);
     }
 
-    // Load goals from Supabase or localStorage
-    async function loadGoals() {
-        try {
-            // Try to load from Supabase first
-            if (window.SupabaseGoals && window.HabitusSupabase?.auth?.isAuthenticated()) {
-                console.log('🔄 Loading goals from Supabase...');
-                await window.SupabaseGoals.loadGoals();
-                await syncGoalsWithSupabase();
-                console.log('✅ Goals loaded from Supabase:', goals.length);
-            } else {
-                console.log('🔄 Supabase not available, loading from localStorage...');
-                const storedGoals = localStorage.getItem('habitus_goals');
-                if (storedGoals) {
-                    goals = JSON.parse(storedGoals);
-                }
-            }
-            updateGoalRoleOptions();
-        } catch (error) {
-            console.error('❌ Error loading goals:', error);
-            // Fallback to localStorage
-            const storedGoals = localStorage.getItem('habitus_goals');
-            if (storedGoals) {
-                goals = JSON.parse(storedGoals);
-            }
+    // Load goals from localStorage
+    function loadGoals() {
+        const storedGoals = localStorage.getItem('habitus_goals');
+        if (storedGoals) {
+            goals = JSON.parse(storedGoals);
             updateGoalRoleOptions();
         }
     }
 
-    // Save goals to Supabase or localStorage
-    async function saveGoals() {
-        try {
-            if (window.SupabaseGoals && window.HabitusSupabase?.auth?.isAuthenticated()) {
-                console.log('🔄 Saving goals to Supabase...');
-                // Goals are automatically saved when using SupabaseGoals methods
-                console.log('✅ Goals saved to Supabase');
-            } else {
-                console.log('🔄 Supabase not available, saving to localStorage...');
-                localStorage.setItem('habitus_goals', JSON.stringify(goals));
-            }
-        } catch (error) {
-            console.error('❌ Error saving goals:', error);
-            // Fallback to localStorage
-            localStorage.setItem('habitus_goals', JSON.stringify(goals));
-        }
-    }
-
-    // Sync local goals with Supabase
-    async function syncGoalsWithSupabase() {
-        try {
-            if (window.SupabaseGoals && window.HabitusSupabase?.auth?.isAuthenticated()) {
-                console.log('🔄 Syncing local goals with Supabase...');
-                
-                // Get current goals from Supabase
-                const supabaseGoals = window.SupabaseGoals.getAllGoals();
-                console.log('🔍 Raw Supabase goals:', supabaseGoals);
-                
-                // Convert Supabase goals to local format
-                const supabaseGoalsLocal = supabaseGoals
-                    .filter(goal => {
-                        // Filter out goals with orphaned roles
-                        if (goal.role_id && window.SupabaseRoles) {
-                            const role = window.SupabaseRoles.getRoleById(goal.role_id);
-                            return !!role; // Only include if role exists
-                        }
-                        return true; // Include goals without role_id
-                    })
-                    .map(goal => {
-                        // Get role name from role_id
-                        let roleName = 'Sin Rol'; // Default for null role_id
-                        if (goal.role_id && window.SupabaseRoles) {
-                            const role = window.SupabaseRoles.getRoleById(goal.role_id);
-                            if (role) {
-                                roleName = role.name;
-                            }
-                        }
-                        
-                        return {
-                            id: goal.id,
-                            name: goal.title,
-                            description: goal.description,
-                            role: roleName,
-                            isDefault: goal.is_default || false,
-                            color: goal.color || '#4F46E5',
-                            createdAt: goal.created_at
-                        };
-                    });
-                
-                console.log('🔍 Converted Supabase goals:', supabaseGoalsLocal);
-                
-                // Merge with existing goals, preserving default goals
-                const existingGoals = [...goals];
-                const mergedGoals = [];
-                
-                // Add Supabase goals
-                supabaseGoalsLocal.forEach(supabaseGoal => {
-                    mergedGoals.push(supabaseGoal);
-                });
-                
-                // Add local default goals that don't exist in Supabase
-                existingGoals.forEach(localGoal => {
-                    if (localGoal.isDefault) {
-                        const existsInSupabase = supabaseGoalsLocal.some(
-                            sg => sg.role === localGoal.role && sg.isDefault
-                        );
-                        if (!existsInSupabase) {
-                            mergedGoals.push(localGoal);
-                        }
-                    }
-                });
-                
-                goals = mergedGoals;
-                console.log('✅ Goals synced with Supabase (preserving defaults):', goals.length);
-                console.log('🔍 Final goals array:', goals);
-            }
-        } catch (error) {
-            console.error('❌ Error syncing goals with Supabase:', error);
-        }
+    // Save goals to localStorage
+    function saveGoals() {
+        localStorage.setItem('habitus_goals', JSON.stringify(goals));
     }
 
     // Update goal role select options
@@ -261,20 +131,14 @@ const Goals = (() => {
     }
 
     // Create default goals for existing roles
-    async function createDefaultGoals() {
+    function createDefaultGoals() {
         const roles = Roles.getRoles();
-        console.log('[Goals] Creating default goals for roles:', roles);
         
-        for (const role of roles) {
-            // Check if default goal already exists for this role (both locally and in Supabase)
-            const existingDefaultLocal = goals.find(g => g.role === role && g.isDefault);
-            const existingDefaultSupabase = window.SupabaseGoals?.getAllGoals()?.find(g => 
-                g.is_default && window.SupabaseRoles?.getRoleById(g.role_id)?.name === role
-            );
+        roles.forEach(role => {
+            // Check if default goal already exists for this role
+            const existingDefault = goals.find(g => g.role === role && g.isDefault);
             
-            if (!existingDefaultLocal && !existingDefaultSupabase) {
-                console.log(`[Goals] Creating default goal for role: ${role}`);
-                
+            if (!existingDefault) {
                 const defaultGoal = {
                     id: generateSecureId(),
                     name: `Otras Prioridades (${role})`,
@@ -285,53 +149,16 @@ const Goals = (() => {
                     createdAt: new Date().toISOString()
                 };
                 
-                // Try to save to Supabase first
-                if (window.SupabaseGoals && window.HabitusSupabase?.auth?.isAuthenticated()) {
-                    try {
-                        // Get role_id from role name
-                        let roleId = null;
-                        if (window.SupabaseRoles) {
-                            const roleObj = window.SupabaseRoles.getRoleByName(role);
-                            if (roleObj) {
-                                roleId = roleObj.id;
-                            }
-                        }
-                        
-                        const supabaseGoalData = {
-                            name: defaultGoal.name,
-                            description: defaultGoal.description,
-                            roleId: roleId,
-                            isDefault: true,
-                            color: defaultGoal.color
-                        };
-                        
-                        await window.SupabaseGoals.addGoal(supabaseGoalData);
-                        console.log(`[Goals] Created default goal in Supabase for role: ${role}`);
-                        
-                        // Reload goals from Supabase to get the updated list
-                        await loadGoals();
-                    } catch (error) {
-                        console.error(`[Goals] Failed to create default goal in Supabase for role: ${role}:`, error);
-                        // Fallback to local storage
-                        goals.push(defaultGoal);
-                        await saveGoals();
-                    }
-                } else {
-                    // Fallback to local storage
-                    goals.push(defaultGoal);
-                    await saveGoals();
-                }
-                
-                // Update UI immediately after adding goal
-                renderGoalsView();
+                goals.push(defaultGoal);
+                console.log(`[Goals] Created default goal for role: ${role}`);
             }
-        }
+        });
         
-        console.log('[Goals] Default goals creation completed');
+        saveGoals();
     }
 
     // Add a new goal
-    async function addGoal(goalData = null) {
+    function addGoal(goalData = null) {
         let finalGoalData;
         
         if (goalData) {
@@ -365,110 +192,55 @@ const Goals = (() => {
             return;
         }
 
-        try {
-            let newGoal; // Declare newGoal variable
-            
-            // Try to add goal to Supabase first
-            if (window.SupabaseGoals && window.HabitusSupabase?.auth?.isAuthenticated()) {
-                console.log('🔄 Adding goal to Supabase...');
-                
-                // Get role ID from role name
-                const roleId = await getRoleIdByName(finalGoalData.role);
-                
-                const supabaseGoalData = {
-                    name: finalGoalData.name,
-                    description: finalGoalData.description,
-                    roleId: roleId,
-                    targetDate: null
-                };
-                
-                const newSupabaseGoal = await window.SupabaseGoals.addGoal(supabaseGoalData);
-                
-                // Create goal with validated data and Supabase ID
-                newGoal = {
-                    ...validation.data,
-                    id: newSupabaseGoal.id,
-                    color: goalData?.color || getNextAvailableColor(),
-                    createdAt: newSupabaseGoal.created_at
-                };
+        // Create goal with validated data
+        const newGoal = {
+            ...validation.data,
+            id: generateSecureId(),
+            color: goalData?.color || getNextAvailableColor(),
+            createdAt: new Date().toISOString()
+        };
 
-                goals.push(newGoal);
-                console.log('✅ Goal added to Supabase successfully');
+        goals.push(newGoal);
+        saveGoals();
+        
+        // Only update UI elements if called from form
+        if (!goalData) {
+            updateGoalRoleOptions();
+            // Clear inputs
+            elements.goalInput.value = '';
+            elements.goalRoleSelect.value = '';
+            elements.goalInput.placeholder = 'Nombre de la meta...';
+        }
+        
+        renderGoalsView();
+        
+        // Update goal options in tasks module
+        console.log('[Goals] Attempting to update goal options in Tasks module...');
+        
+        // Add a small delay to ensure Tasks module is ready
+        setTimeout(() => {
+            if (window.Tasks && window.Tasks.updateGoalOptions) {
+                console.log('[Goals] Tasks module and updateGoalOptions function found, calling...');
+                window.Tasks.updateGoalOptions();
+                console.log('[Goals] updateGoalOptions called successfully');
             } else {
-                console.log('🔄 Supabase not available, adding to localStorage...');
-                
-                // Create goal with validated data
-                newGoal = {
-                    ...validation.data,
-                    id: generateSecureId(),
-                    color: goalData?.color || getNextAvailableColor(),
-                    createdAt: new Date().toISOString()
-                };
-
-                goals.push(newGoal);
-                saveGoals();
-            }
-            
-            // Only update UI elements if called from form
-            if (!goalData) {
-                updateGoalRoleOptions();
-                // Clear inputs
-                elements.goalInput.value = '';
-                elements.goalRoleSelect.value = '';
-                elements.goalInput.placeholder = 'Nombre de la meta...';
-            }
-            
-            renderGoalsView();
-            
-            // Update goal options in tasks module
-            console.log('[Goals] Attempting to update goal options in Tasks module...');
-            
-            // Add a small delay to ensure Tasks module is ready
-            setTimeout(() => {
-                if (window.Tasks && window.Tasks.updateGoalOptions) {
-                    console.log('[Goals] Tasks module and updateGoalOptions function found, calling...');
-                    window.Tasks.updateGoalOptions();
-                    console.log('[Goals] updateGoalOptions called successfully');
+                console.error('[Goals] Tasks module or updateGoalOptions function not found');
+                if (!window.Tasks) {
+                    console.error('[Goals] window.Tasks is undefined');
                 } else {
-                    console.error('[Goals] Tasks module or updateGoalOptions function not found');
-                    if (!window.Tasks) {
-                        console.error('[Goals] window.Tasks is undefined');
-                    } else {
-                        console.error('[Goals] updateGoalOptions function is undefined');
-                    }
-                }
-            }, 100);
-
-            // Show success notification only if called from form
-            if (!goalData) {
-                if (window.App && window.App.showNotification) {
-                    window.App.showNotification('Meta creada correctamente', 'success');
+                    console.error('[Goals] updateGoalOptions function is undefined');
                 }
             }
-            
-            return newGoal; // Return the created goal for external callers
-            
-        } catch (error) {
-            console.error('❌ Error adding goal:', error);
+        }, 100);
+
+        // Show success notification only if called from form
+        if (!goalData) {
             if (window.App && window.App.showNotification) {
-                window.App.showNotification('Error al agregar la meta. Inténtalo de nuevo.', 'error');
+                window.App.showNotification('Meta creada correctamente', 'success');
             }
-            return null;
         }
-    }
-
-    // Helper function to get role ID by name
-    async function getRoleIdByName(roleName) {
-        try {
-            if (window.SupabaseRoles && window.HabitusSupabase?.auth?.isAuthenticated()) {
-                const role = window.SupabaseRoles.getRoleByName(roleName);
-                return role ? role.id : null;
-            }
-            return null;
-        } catch (error) {
-            console.error('❌ Error getting role ID:', error);
-            return null;
-        }
+        
+        return newGoal; // Return the created goal for external callers
     }
 
     // Get next available color for new goals
@@ -484,17 +256,8 @@ const Goals = (() => {
         return GOAL_COLORS[Math.floor(Math.random() * GOAL_COLORS.length)];
     }
 
-    // Get dependent tasks for a goal
-    function getDependentTasks(goalId) {
-        if (window.Tasks && window.Tasks.getTasks) {
-            const tasks = window.Tasks.getTasks();
-            return tasks.filter(task => task.goal === goalId);
-        }
-        return [];
-    }
-
     // Delete a goal (only non-default goals)
-    async function deleteGoal(goalId) {
+    function deleteGoal(goalId) {
         const goalIndex = goals.findIndex(g => g.id === goalId);
         if (goalIndex === -1) return;
 
@@ -507,42 +270,16 @@ const Goals = (() => {
         }
 
         // Check if goal has associated tasks
-        const dependentTasks = getDependentTasks(goalId);
-        const hasTasks = dependentTasks.length > 0;
-        
+        const hasTasks = Tasks.hasTasksForGoal(goalId);
         if (hasTasks) {
-            // Build warning message
-            let warningMessage = `¿Estás seguro de que quieres eliminar la meta "${goal.name}"?\n\n`;
-            warningMessage += `Esta acción eliminará también:\n`;
-            warningMessage += `• ${dependentTasks.length} tarea${dependentTasks.length > 1 ? 's' : ''} asociada${dependentTasks.length > 1 ? 's' : ''}\n`;
-            warningMessage += `\nEsta acción no se puede deshacer.`;
-            
-            if (!confirm(warningMessage)) {
+            if (!confirm('Esta meta tiene tareas asociadas. ¿Estás seguro de que quieres eliminarla? Las tareas se moverán a la meta por defecto.')) {
                 return;
             }
             
-            // Delete dependent tasks first
-            console.log(`🔄 Deleting ${dependentTasks.length} dependent tasks...`);
-            for (const task of dependentTasks) {
-                if (window.Tasks && window.Tasks.deleteTask) {
-                    await window.Tasks.deleteTask(task.id);
-                }
-            }
+            // Move tasks to default goal
+            Tasks.moveTasksToDefaultGoal(goalId, goal.role);
         }
 
-        try {
-            // Try to delete from Supabase first
-            if (window.SupabaseGoals && window.HabitusSupabase?.auth?.isAuthenticated()) {
-                console.log('🔄 Deleting goal from Supabase...');
-                await window.SupabaseGoals.deleteGoal(goalId);
-                console.log('✅ Goal deleted from Supabase successfully');
-            }
-        } catch (error) {
-            console.error('❌ Failed to delete goal from Supabase:', error);
-            // Continue with local deletion even if Supabase fails
-        }
-
-        // Remove from local array
         goals.splice(goalIndex, 1);
         saveGoals();
         renderGoalsView();
@@ -557,29 +294,13 @@ const Goals = (() => {
     }
 
     // Edit goal name
-    async function editGoal(goalId) {
+    function editGoal(goalId) {
         const goal = goals.find(g => g.id === goalId);
         if (!goal || goal.isDefault) return;
 
         const newName = prompt('Editar nombre de la meta:', goal.name);
         if (newName && newName.trim() !== goal.name) {
-            const oldName = goal.name;
             goal.name = newName.trim();
-            
-            try {
-                // Try to update in Supabase first
-                if (window.SupabaseGoals && window.HabitusSupabase?.auth?.isAuthenticated()) {
-                    console.log('🔄 Updating goal in Supabase...');
-                    await window.SupabaseGoals.updateGoal(goalId, {
-                        title: newName.trim()
-                    });
-                    console.log('✅ Goal updated in Supabase successfully');
-                }
-            } catch (error) {
-                console.error('❌ Failed to update goal in Supabase:', error);
-                // Continue with local update even if Supabase fails
-            }
-            
             saveGoals();
             renderGoalsView();
             
@@ -763,19 +484,15 @@ const Goals = (() => {
     }
 
     // Update goals when roles change
-    async function onRolesChanged() {
-        console.log('[Goals] Roles changed, updating goals...');
-        
+    function onRolesChanged() {
         updateGoalRoleOptions();
-        await createDefaultGoals();
+        createDefaultGoals();
         renderGoalsView();
         
         // Update goal options in tasks module
         if (window.Tasks && window.Tasks.updateGoalOptions) {
             window.Tasks.updateGoalOptions();
         }
-        
-        console.log('[Goals] Goals updated after role change');
     }
 
     // Helper function to generate secure IDs
@@ -884,173 +601,18 @@ const Goals = (() => {
         console.log('[Goals] Goal moved successfully');
     }
 
-    // Force sync goals with Supabase
-    async function forceSyncGoals() {
-        console.log('🔄 Force syncing goals with Supabase...');
-        
-        try {
-            // Clear local goals array
-            goals = [];
-            
-            // Force reload from Supabase
-            if (window.SupabaseGoals && window.HabitusSupabase?.auth?.isAuthenticated()) {
-                await window.SupabaseGoals.loadGoals();
-                await syncGoalsWithSupabase();
-                
-                // Create default goals for any missing roles
-                createDefaultGoals();
-                
-                // Clean up goals with null roles
-                await cleanupNullRoleGoals();
-                
-                // Update UI
-                renderGoalsView();
-                
-                console.log('✅ Force sync completed successfully');
-                return true;
-            } else {
-                console.log('❌ Supabase not available for force sync');
-                return false;
-            }
-        } catch (error) {
-            console.error('❌ Force sync failed:', error);
-            return false;
-        }
-    }
-
-    // Clean up goals with null roles
-    async function cleanupNullRoleGoals() {
-        try {
-            if (window.SupabaseGoals && window.HabitusSupabase?.auth?.isAuthenticated()) {
-                console.log('🔄 Cleaning up goals with null roles...');
-                
-                const supabaseGoals = window.SupabaseGoals.getAllGoals();
-                const goalsWithNullRole = supabaseGoals.filter(goal => !goal.role_id);
-                
-                if (goalsWithNullRole.length > 0) {
-                    console.log(`🔍 Found ${goalsWithNullRole.length} goals with null roles`);
-                    
-                    for (const goal of goalsWithNullRole) {
-                        try {
-                            // Delete the goal from Supabase instead of updating it
-                            await window.SupabaseGoals.deleteGoal(goal.id);
-                            console.log(`✅ Deleted goal ${goal.title} with null role`);
-                        } catch (error) {
-                            console.error(`❌ Failed to delete goal ${goal.title}:`, error);
-                        }
-                    }
-                    
-                    // Reload goals after cleanup
-                    await window.SupabaseGoals.loadGoals();
-                    await syncGoalsWithSupabase();
-                }
-            }
-        } catch (error) {
-            console.error('❌ Error cleaning up null role goals:', error);
-        }
-    }
-
-    // Clean up goals with orphaned roles (roles that no longer exist)
-    async function cleanupOrphanedRoleGoals() {
-        try {
-            if (window.SupabaseGoals && window.SupabaseRoles && window.HabitusSupabase?.auth?.isAuthenticated()) {
-                console.log('🔄 Cleaning up goals with orphaned roles...');
-                
-                const supabaseGoals = window.SupabaseGoals.getAllGoals();
-                const orphanedGoals = [];
-                
-                // Find goals with roles that no longer exist
-                supabaseGoals.forEach(goal => {
-                    if (goal.role_id) {
-                        const role = window.SupabaseRoles.getRoleById(goal.role_id);
-                        if (!role) {
-                            orphanedGoals.push(goal);
-                        }
-                    }
-                });
-                
-                if (orphanedGoals.length > 0) {
-                    console.log(`🔍 Found ${orphanedGoals.length} goals with orphaned roles`);
-                    
-                    for (const goal of orphanedGoals) {
-                        try {
-                            await window.SupabaseGoals.deleteGoal(goal.id);
-                            console.log(`✅ Deleted goal ${goal.title} with orphaned role`);
-                        } catch (error) {
-                            console.error(`❌ Failed to delete goal ${goal.title}:`, error);
-                        }
-                    }
-                    
-                    // Reload goals after cleanup
-                    await window.SupabaseGoals.loadGoals();
-                    await syncGoalsWithSupabase();
-                }
-            }
-        } catch (error) {
-            console.error('❌ Error cleaning up orphaned role goals:', error);
-        }
-    }
-
-    // Clean up duplicate goals
-    async function cleanupDuplicateGoals() {
-        try {
-            if (window.SupabaseGoals && window.HabitusSupabase?.auth?.isAuthenticated()) {
-                console.log('🔄 Cleaning up duplicate goals...');
-                
-                const supabaseGoals = window.SupabaseGoals.getAllGoals();
-                const goalsByTitle = {};
-                const duplicates = [];
-                
-                // Find duplicates by title and role_id
-                supabaseGoals.forEach(goal => {
-                    const key = `${goal.title}-${goal.role_id}`;
-                    if (goalsByTitle[key]) {
-                        duplicates.push(goal);
-                    } else {
-                        goalsByTitle[key] = goal;
-                    }
-                });
-                
-                if (duplicates.length > 0) {
-                    console.log(`🔍 Found ${duplicates.length} duplicate goals`);
-                    
-                    for (const goal of duplicates) {
-                        try {
-                            await window.SupabaseGoals.deleteGoal(goal.id);
-                            console.log(`✅ Deleted duplicate goal ${goal.title}`);
-                        } catch (error) {
-                            console.error(`❌ Failed to delete duplicate goal ${goal.title}:`, error);
-                        }
-                    }
-                    
-                    // Reload goals after cleanup
-                    await window.SupabaseGoals.loadGoals();
-                    await syncGoalsWithSupabase();
-                }
-            }
-        } catch (error) {
-            console.error('❌ Error cleaning up duplicate goals:', error);
-        }
-    }
-
     // Public API
     return {
         init,
         addGoal,
-        deleteGoal,
         getGoals,
         getGoalsForRole,
         getGoalById,
         getDefaultGoalForRole,
         hasGoalsForRole,
-        getDependentTasks,
         onRolesChanged,
         renderGoalsView,
-        createDefaultGoals,
-        forceSyncGoals,
-        cleanupNullRoleGoals,
-        cleanupOrphanedRoleGoals,
-        cleanupDuplicateGoals
+        createDefaultGoals
     };
 })();
 

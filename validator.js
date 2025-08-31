@@ -295,14 +295,11 @@ const HabitusValidator = (() => {
 
     // Generic field validator
     function validateField(value, constraints, fieldName) {
-        console.log('🔍 Debug - validateField called with:', { value, constraints, fieldName });
         const errors = [];
         
         // Required validation
         if (constraints.required) {
-            console.log('🔍 Debug - Checking required validation');
             const requiredResult = validateRequired(value, fieldName);
-            console.log('🔍 Debug - Required validation result:', requiredResult);
             if (!requiredResult.valid) {
                 return requiredResult;
             }
@@ -452,22 +449,15 @@ const HabitusValidator = (() => {
 
         // Role validation
         validateRole(roleName, existingRoles = []) {
-            console.log('🔍 Debug - validateRole called with:', { roleName, existingRoles });
-            
             const sanitizedName = sanitizeString(roleName, 50);
-            console.log('🔍 Debug - sanitizedName:', sanitizedName);
-            
             const validation = validateField(sanitizedName, CONSTRAINTS.role.name, 'role');
-            console.log('🔍 Debug - field validation result:', validation);
             
             if (!validation.valid) {
-                console.log('❌ Field validation failed:', validation);
                 return validation;
             }
             
             // Check for duplicates
             if (existingRoles.includes(sanitizedName)) {
-                console.log('❌ Duplicate role found:', sanitizedName);
                 return {
                     valid: false,
                     error: getMessage('duplicate'),
@@ -475,7 +465,6 @@ const HabitusValidator = (() => {
                 };
             }
             
-            console.log('✅ Role validation passed:', sanitizedName);
             return {
                 valid: true,
                 data: sanitizedName

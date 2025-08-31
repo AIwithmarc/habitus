@@ -65,7 +65,7 @@ const Tasks = (() => {
     const SCROLL_ACCELERATION = 1.5; // multiplier for scroll speed when holding at edge
 
     // Initialize tasks module
-    async function init() {
+    function init() {
         try {
             console.log('[Tasks] Initializing module...');
             
@@ -87,7 +87,7 @@ const Tasks = (() => {
             elements.tabQuadrants = document.getElementById('tabQuadrants');
 
             // Load saved data
-            await loadData();
+            loadData();
             
             // Migrate metrics data if needed
             migrateMetricsData();
@@ -327,124 +327,28 @@ const Tasks = (() => {
         }
     }
 
-    // Load data from Supabase or localStorage
-    async function loadData() {
-        try {
-            // Try to load from Supabase first
-            if (window.SupabaseTasks && window.HabitusSupabase?.auth?.isAuthenticated()) {
-                console.log('🔄 Loading tasks from Supabase...');
-                await window.SupabaseTasks.loadTasks();
-                await window.SupabaseTasks.loadMetrics();
-                await syncTasksWithSupabase();
-                console.log('✅ Tasks loaded from Supabase:', tasks.length);
-            } else {
-                console.log('🔄 Supabase not available, loading from localStorage...');
-                const storedTasks = localStorage.getItem('habitus_tasks');
-                const storedMetrics = localStorage.getItem('habitus_metrics');
-                const storedTasksLog = localStorage.getItem('habitus_tasksLog');
-                const storedLastReview = localStorage.getItem('habitus_lastReview');
-                const storedLastReset = localStorage.getItem('habitus_lastReset');
+    // Load data from localStorage
+    function loadData() {
+        const storedTasks = localStorage.getItem('habitus_tasks');
+        const storedMetrics = localStorage.getItem('habitus_metrics');
+        const storedTasksLog = localStorage.getItem('habitus_tasksLog');
+        const storedLastReview = localStorage.getItem('habitus_lastReview');
+        const storedLastReset = localStorage.getItem('habitus_lastReset');
 
-                if (storedTasks) tasks = JSON.parse(storedTasks);
-                if (storedMetrics) metrics = JSON.parse(storedMetrics);
-                if (storedTasksLog) tasksLog = JSON.parse(storedTasksLog);
-                if (storedLastReview) lastReviewText = storedLastReview;
-                if (storedLastReset) lastResetTime = parseInt(storedLastReset);
+        if (storedTasks) tasks = JSON.parse(storedTasks);
+        if (storedMetrics) metrics = JSON.parse(storedMetrics);
+        if (storedTasksLog) tasksLog = JSON.parse(storedTasksLog);
+        if (storedLastReview) lastReviewText = storedLastReview;
+        if (storedLastReset) lastResetTime = parseInt(storedLastReset);
+
+        // Show last review if exists
+        if (lastReviewText && lastReviewText.trim() !== '') {
+            const lastReviewBox = document.getElementById('lastReviewBox');
+            const lastReviewSpan = document.getElementById('lastReviewText');
+            if (lastReviewBox && lastReviewSpan) {
+                lastReviewBox.classList.remove('hidden');
+                lastReviewSpan.textContent = lastReviewText;
             }
-
-            // Show last review if exists
-            if (lastReviewText && lastReviewText.trim() !== '') {
-                const lastReviewBox = document.getElementById('lastReviewBox');
-                const lastReviewSpan = document.getElementById('lastReviewText');
-                if (lastReviewBox && lastReviewSpan) {
-                    lastReviewBox.classList.remove('hidden');
-                    lastReviewSpan.textContent = lastReviewText;
-                }
-            }
-        } catch (error) {
-            console.error('❌ Error loading tasks:', error);
-            // Fallback to localStorage
-            const storedTasks = localStorage.getItem('habitus_tasks');
-            const storedMetrics = localStorage.getItem('habitus_metrics');
-            const storedTasksLog = localStorage.getItem('habitus_tasksLog');
-            const storedLastReview = localStorage.getItem('habitus_lastReview');
-            const storedLastReset = localStorage.getItem('habitus_lastReset');
-
-            if (storedTasks) tasks = JSON.parse(storedTasks);
-            if (storedMetrics) metrics = JSON.parse(storedMetrics);
-            if (storedTasksLog) tasksLog = JSON.parse(storedTasksLog);
-            if (storedLastReview) lastReviewText = storedLastReview;
-            if (storedLastReset) lastResetTime = parseInt(storedLastReset);
-        }
-    }
-
-    // Sync local tasks with Supabase
-    async function syncTasksWithSupabase() {
-        try {
-            if (window.SupabaseTasks && window.HabitusSupabase?.auth?.isAuthenticated()) {
-                console.log('🔄 Syncing local tasks with Supabase...');
-                
-                // Get current tasks from Supabase
-                const supabaseTasks = window.SupabaseTasks.getAllTasks();
-                console.log('🔍 Raw Supabase tasks:', supabaseTasks);
-                
-                // Convert Supabase tasks to local format with proper mapping
-                const supabaseTasksLocal = supabaseTasks.map(task => {
-                    // Get role name from role_id
-                    let roleName = 'Sin Rol';
-                    if (task.role_id && window.SupabaseRoles) {
-                        const role = window.SupabaseRoles.getRoleById(task.role_id);
-                        if (role) {
-                            roleName = role.name;
-                        } else {
-                            // Skip tasks with orphaned roles - they will be cleaned up
-                            return null;
-                        }
-                    }
-                    
-                    // Get goal name from goal_id
-                    let goalName = 'Sin Meta';
-                    if (task.goal_id && window.SupabaseGoals) {
-                        const goal = window.SupabaseGoals.getGoalById(task.goal_id);
-                        if (goal) {
-                            goalName = goal.title;
-                        } else {
-                            // Skip tasks with orphaned goals - they will be cleaned up
-                            return null;
-                        }
-                    }
-                    
-                    return {
-                        id: task.id,
-                        title: task.title,
-                        description: task.description,
-                        role: roleName,
-                        goal: goalName,
-                        quadrant: task.quadrant || 1,
-                        status: task.status || 'pending',
-                        priority: task.priority || 1,
-                        dueDate: task.due_date,
-                        createdAt: task.created_at,
-                        completedAt: task.completed_at
-                    };
-                });
-                
-                console.log('🔍 Converted Supabase tasks:', supabaseTasksLocal);
-                
-                // Filter out null values (orphaned tasks)
-                const filteredTasks = supabaseTasksLocal.filter(task => task !== null);
-                console.log(`🔍 Filtered out ${supabaseTasksLocal.length - filteredTasks.length} orphaned tasks`);
-                
-                // Update local tasks array with Supabase data
-                tasks = filteredTasks;
-                console.log('✅ Tasks synced with Supabase:', tasks.length);
-                console.log('🔍 Final tasks array:', tasks);
-                
-                // Update UI after sync
-                updateUI();
-            }
-        } catch (error) {
-            console.error('❌ Error syncing tasks with Supabase:', error);
         }
     }
 
@@ -514,30 +418,13 @@ const Tasks = (() => {
         }
     }
 
-    // Save data to Supabase or localStorage
-    async function saveData() {
-        try {
-            if (window.SupabaseTasks && window.HabitusSupabase?.auth?.isAuthenticated()) {
-                console.log('🔄 Saving tasks to Supabase...');
-                // Tasks are automatically saved when using SupabaseTasks methods
-                console.log('✅ Tasks saved to Supabase');
-            } else {
-                console.log('🔄 Supabase not available, saving to localStorage...');
-                localStorage.setItem('habitus_tasks', JSON.stringify(tasks));
-                localStorage.setItem('habitus_metrics', JSON.stringify(metrics));
-                localStorage.setItem('habitus_tasksLog', JSON.stringify(tasksLog));
-                localStorage.setItem('habitus_lastReview', lastReviewText);
-                localStorage.setItem('habitus_lastReset', JSON.stringify(lastResetTime));
-            }
-        } catch (error) {
-            console.error('❌ Error saving tasks:', error);
-            // Fallback to localStorage
-            localStorage.setItem('habitus_tasks', JSON.stringify(tasks));
-            localStorage.setItem('habitus_metrics', JSON.stringify(metrics));
-            localStorage.setItem('habitus_tasksLog', JSON.stringify(tasksLog));
-            localStorage.setItem('habitus_lastReview', lastReviewText);
-            localStorage.setItem('habitus_lastReset', JSON.stringify(lastResetTime));
-        }
+    // Save data to localStorage
+    function saveData() {
+        localStorage.setItem('habitus_tasks', JSON.stringify(tasks));
+        localStorage.setItem('habitus_metrics', JSON.stringify(metrics));
+        localStorage.setItem('habitus_tasksLog', JSON.stringify(tasksLog));
+        localStorage.setItem('habitus_lastReview', lastReviewText);
+        localStorage.setItem('habitus_lastReset', JSON.stringify(lastResetTime));
     }
 
     // Initialize charts with improved error handling
@@ -1035,7 +922,7 @@ const Tasks = (() => {
     }
 
     // Add a new task with robust validation
-    async function addTask(taskData = null) {
+    function addTask(taskData = null) {
         console.log('[Tasks] addTask called with:', { taskData, stack: new Error().stack });
         
         let finalTaskData;
@@ -1128,67 +1015,8 @@ const Tasks = (() => {
         // Use validated and sanitized data
         const newTask = validation.data;
         
-        // Try to save to Supabase first
-        if (window.SupabaseTasks && window.HabitusSupabase?.auth?.isAuthenticated()) {
-            try {
-                console.log('🔄 Adding task to Supabase...');
-                
-                // Get role_id from role name
-                let roleId = null;
-                if (newTask.role && window.SupabaseRoles) {
-                    const role = window.SupabaseRoles.getRoleByName(newTask.role);
-                    if (role) {
-                        roleId = role.id;
-                    }
-                }
-                
-                // Get goal_id from goal ID or name
-                let goalId = null;
-                if (newTask.goal && window.SupabaseGoals) {
-                    // First try to get by ID (if it's already an ID)
-                    if (window.SupabaseGoals.getGoalById) {
-                        const goal = window.SupabaseGoals.getGoalById(newTask.goal);
-                        if (goal) {
-                            goalId = goal.id;
-                        }
-                    }
-                    
-                    // If not found by ID, try by title
-                    if (!goalId && window.SupabaseGoals.getGoalByTitle) {
-                        const goal = window.SupabaseGoals.getGoalByTitle(newTask.goal);
-                        if (goal) {
-                            goalId = goal.id;
-                        }
-                    }
-                }
-                
-                const supabaseTaskData = {
-                    title: newTask.description,
-                    description: newTask.description,
-                    status: newTask.completed ? 'completed' : 'pending',
-                    priority: newTask.priority || 1,
-                    dueDate: newTask.dueDate || null,
-                    roleId: roleId,
-                    goalId: goalId,
-                    quadrant: parseInt(newTask.quadrant) || 1
-                };
-                
-                await window.SupabaseTasks.addTask(supabaseTaskData);
-                console.log('✅ Task added to Supabase successfully');
-                
-                // Sync with local array
-                await syncTasksWithSupabase();
-            } catch (error) {
-                console.error('❌ Failed to add task to Supabase:', error);
-                // Fallback to local storage
-                tasks.push(newTask);
-                saveData();
-            }
-        } else {
-            // Fallback to local storage
-            tasks.push(newTask);
-            saveData();
-        }
+        tasks.push(newTask);
+        saveData();
         
         // Only update UI elements if called from form
         if (!taskData) {
@@ -1227,32 +1055,10 @@ const Tasks = (() => {
     }
 
     // Delete a task
-    async function deleteTask(taskId) {
+    function deleteTask(taskId) {
         const taskIndex = tasks.findIndex(t => t.id === taskId);
         if (taskIndex === -1) return;
 
-        const task = tasks[taskIndex];
-        
-        // Show confirmation dialog
-        const confirmMessage = `¿Estás seguro de que quieres eliminar la tarea "${task.description}"?\n\nEsta acción no se puede deshacer.`;
-        
-        if (!confirm(confirmMessage)) {
-            return;
-        }
-
-        try {
-            // Try to delete from Supabase first
-            if (window.SupabaseTasks && window.HabitusSupabase?.auth?.isAuthenticated()) {
-                console.log('🔄 Deleting task from Supabase...');
-                await window.SupabaseTasks.deleteTask(taskId);
-                console.log('✅ Task deleted from Supabase successfully');
-            }
-        } catch (error) {
-            console.error('❌ Failed to delete task from Supabase:', error);
-            // Continue with local deletion even if Supabase fails
-        }
-
-        // Remove from local array
         tasks.splice(taskIndex, 1);
         saveData();
         updateUI();
@@ -1794,15 +1600,14 @@ const Tasks = (() => {
     function renderTask(task) {
         const quadrantClass = `q${task.quadrant}`;
         
-        // Get goal information - task.goal is now the goal name
-        let goalName = task.goal || 'Meta no encontrada';
+        // Get goal information
+        let goalName = 'Meta no encontrada';
         let goalColor = '#6B7280';
         
-        // Try to get goal color from Goals module
-        if (window.Goals && window.Goals.getGoals) {
-            const goals = window.Goals.getGoals();
-            const goal = goals.find(g => g.name === task.goal);
-            if (goal && goal.color) {
+        if (window.Goals && window.Goals.getGoalById) {
+            const goal = window.Goals.getGoalById(task.goal);
+            if (goal) {
+                goalName = goal.name;
                 goalColor = goal.color;
             }
         }
@@ -2121,7 +1926,7 @@ const Tasks = (() => {
 
         // Render all goals, even if they have no tasks
         availableGoals.forEach(goal => {
-            const goalTasks = tasksByGoal[goal.name] || [];
+            const goalTasks = tasksByGoal[goal.id] || [];
             
             const goalSection = document.createElement('div');
             goalSection.className = 'mb-4';
@@ -2158,120 +1963,6 @@ const Tasks = (() => {
         setupTaskDragAndDrop();
     }
 
-    // Clean up tasks with missing goals
-    async function cleanupTasksWithMissingGoals() {
-        console.log('🔄 Cleaning up tasks with missing goals...');
-        
-        try {
-            if (window.SupabaseTasks && window.HabitusSupabase?.auth?.isAuthenticated()) {
-                const supabaseTasks = window.SupabaseTasks.getAllTasks();
-                const tasksWithMissingGoals = supabaseTasks.filter(task => !task.goal_id);
-                
-                if (tasksWithMissingGoals.length > 0) {
-                    console.log(`🔍 Found ${tasksWithMissingGoals.length} tasks with missing goals`);
-                    
-                    for (const task of tasksWithMissingGoals) {
-                        try {
-                            await window.SupabaseTasks.deleteTask(task.id);
-                            console.log(`✅ Deleted task ${task.title} with missing goal`);
-                        } catch (error) {
-                            console.error(`❌ Failed to delete task ${task.title}:`, error);
-                        }
-                    }
-                    
-                    // Reload tasks after cleanup
-                    await window.SupabaseTasks.loadTasks();
-                    await syncTasksWithSupabase();
-                }
-            }
-        } catch (error) {
-            console.error('❌ Error cleaning up tasks with missing goals:', error);
-        }
-    }
-
-    // Fix tasks with incorrect goal assignments
-    async function fixTaskGoalAssignments() {
-        console.log('🔄 Fixing task goal assignments...');
-        
-        try {
-            if (window.SupabaseTasks && window.HabitusSupabase?.auth?.isAuthenticated()) {
-                const supabaseTasks = window.SupabaseTasks.getAllTasks();
-                let fixedCount = 0;
-                
-                for (const task of supabaseTasks) {
-                    // Check if task has goal_id but it's invalid
-                    if (task.goal_id && window.SupabaseGoals) {
-                        const goal = window.SupabaseGoals.getGoalById(task.goal_id);
-                        if (!goal) {
-                            console.log(`🔍 Task ${task.title} has invalid goal_id: ${task.goal_id}`);
-                            
-                            // Try to find a default goal for the role
-                            if (task.role_id && window.SupabaseRoles) {
-                                const role = window.SupabaseRoles.getRoleById(task.role_id);
-                                if (role) {
-                                    const defaultGoal = window.SupabaseGoals.getAllGoals().find(g => 
-                                        g.is_default && g.role_id === task.role_id
-                                    );
-                                    
-                                    if (defaultGoal) {
-                                        try {
-                                            await window.SupabaseTasks.updateTask(task.id, {
-                                                goalId: defaultGoal.id
-                                            });
-                                            console.log(`✅ Fixed task ${task.title} with default goal ${defaultGoal.title}`);
-                                            fixedCount++;
-                                        } catch (error) {
-                                            console.error(`❌ Failed to fix task ${task.title}:`, error);
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-                
-                if (fixedCount > 0) {
-                    console.log(`✅ Fixed ${fixedCount} task goal assignments`);
-                    // Reload tasks after fixes
-                    await window.SupabaseTasks.loadTasks();
-                    await syncTasksWithSupabase();
-                } else {
-                    console.log('✅ No task goal assignments needed fixing');
-                }
-            }
-        } catch (error) {
-            console.error('❌ Error fixing task goal assignments:', error);
-        }
-    }
-
-    // Force sync tasks with Supabase
-    async function forceSyncTasks() {
-        console.log('🔄 Force syncing tasks with Supabase...');
-        
-        try {
-            // Clear local tasks array
-            tasks = [];
-            
-            // Force reload from Supabase
-            if (window.SupabaseTasks && window.HabitusSupabase?.auth?.isAuthenticated()) {
-                await window.SupabaseTasks.loadTasks();
-                await syncTasksWithSupabase();
-                
-                // Update UI
-                updateUI();
-                
-                console.log('✅ Force sync completed successfully');
-                return true;
-            } else {
-                console.log('❌ Supabase not available for force sync');
-                return false;
-            }
-        } catch (error) {
-            console.error('❌ Force sync failed:', error);
-            return false;
-        }
-    }
-
     // Public API
     return {
         init,
@@ -2298,10 +1989,7 @@ const Tasks = (() => {
         moveTasksToDefaultGoal,
         updateGoalOptions,  // Add this function to public API
         handleDragOver,
-        handleDrop,
-        forceSyncTasks,
-        cleanupTasksWithMissingGoals,
-        fixTaskGoalAssignments
+        handleDrop
     };
 })();
 
