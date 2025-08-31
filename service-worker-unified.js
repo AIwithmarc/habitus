@@ -6,10 +6,10 @@
 
 // Dynamic configuration
 const CONFIG = {
-    CACHE_NAME: 'habitus-v2.7.0',
-    CACHE_STATIC: 'habitus-static-v2.7.0',
-    CACHE_DYNAMIC: 'habitus-dynamic-v2.7.0',
-    CACHE_CDN: 'habitus-cdn-v2.7.0',
+    CACHE_NAME: 'habitus-v2.8.0',
+    CACHE_STATIC: 'habitus-static-v2.8.0',
+    CACHE_DYNAMIC: 'habitus-dynamic-v2.8.0',
+    CACHE_CDN: 'habitus-cdn-v2.8.0',
     
     // Auto-detect base path
     BASE_PATH: (() => {
@@ -97,18 +97,23 @@ self.addEventListener('install', (event) => {
 
 // Activate event - Clean old caches and claim clients
 self.addEventListener('activate', (event) => {
-    console.log('[SW] Activating Service Worker v2.0.0');
+    console.log('[SW] Activating Service Worker v2.8.0');
     
     event.waitUntil(
         Promise.all([
-            // Clean old caches
+            // Clean ALL old caches to force fresh content
             caches.keys().then(cacheNames => {
+                console.log('[SW] Cleaning old caches:', cacheNames);
                 return Promise.all(
-                    cacheNames
-                        .filter(cacheName => 
-                            cacheName.startsWith('habitus-') && 
-                            !Object.values(CONFIG).includes(cacheName)
-                        )
+                    cacheNames.map(cacheName => {
+                        if (cacheName.startsWith('habitus-')) {
+                            console.log('[SW] Deleting cache:', cacheName);
+                            return caches.delete(cacheName);
+                        }
+                        return Promise.resolve();
+                    })
+                );
+            }),
                         .map(cacheName => {
                             console.log('[SW] Deleting old cache:', cacheName);
                             return caches.delete(cacheName);
