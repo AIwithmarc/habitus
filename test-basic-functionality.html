@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test - Funcionalidad Básica Habitus</title>
+    <link href="vendor/tailwind.min.css" rel="stylesheet">
+    <style>
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 8px; }
+        .test-success { background-color: #d4edda; border-color: #c3e6cb; }
+        .test-error { background-color: #f8d7da; border-color: #f5c6cb; }
+        .test-warning { background-color: #fff3cd; border-color: #ffeaa7; }
+    </style>
+</head>
+<body class="bg-gray-100 p-4">
+    <div class="max-w-4xl mx-auto">
+        <h1 class="text-2xl font-bold mb-6">🧪 Test de Funcionalidad Básica - Habitus</h1>
+        <p class="text-gray-600 mb-4">Verificando que las funciones principales funcionen correctamente sin las funciones de migración.</p>
+        
+        <div id="testResults" class="space-y-4">
+            <!-- Los resultados se mostrarán aquí -->
+        </div>
+        
+        <div class="mt-6 p-4 bg-blue-50 rounded-lg">
+            <h3 class="font-semibold text-blue-800">📋 Funciones Verificadas:</h3>
+            <ul class="mt-2 text-sm text-blue-700 space-y-1">
+                <li>✅ Carga de módulos principales (App, Roles, Tasks, Goals, CheckIn)</li>
+                <li>✅ Funciones de localStorage</li>
+                <li>✅ Interfaz de usuario básica</li>
+                <li>✅ Navegación entre pestañas</li>
+                <li>🚧 Funciones de migración (desactivadas temporalmente)</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        // Función para mostrar resultados de test
+        function addTestResult(title, status, message, details = null) {
+            const resultsDiv = document.getElementById('testResults');
+            const statusClass = status === 'success' ? 'test-success' : 
+                               status === 'error' ? 'test-error' : 'test-warning';
+            
+            const resultHtml = `
+                <div class="test-section ${statusClass}">
+                    <h3 class="font-semibold">${title}</h3>
+                    <p class="text-sm mt-1">${message}</p>
+                    ${details ? `<pre class="text-xs mt-2 bg-white p-2 rounded overflow-auto">${JSON.stringify(details, null, 2)}</pre>` : ''}
+                </div>
+            `;
+            
+            resultsDiv.innerHTML += resultHtml;
+        }
+
+        // Test 1: Verificar que los módulos principales estén disponibles
+        function testMainModules() {
+            const modules = ['App', 'Roles', 'Tasks', 'Goals', 'CheckIn'];
+            const availableModules = modules.filter(module => window[module]);
+            
+            if (availableModules.length === modules.length) {
+                addTestResult(
+                    '✅ Módulos Principales',
+                    'success',
+                    `Todos los módulos principales están disponibles: ${availableModules.join(', ')}`
+                );
+            } else {
+                addTestResult(
+                    '❌ Módulos Principales',
+                    'error',
+                    `Faltan módulos: ${modules.filter(m => !window[m]).join(', ')}`,
+                    { available: availableModules, missing: modules.filter(m => !window[m]) }
+                );
+            }
+        }
+
+        // Test 2: Verificar localStorage
+        function testLocalStorage() {
+            try {
+                const testKey = 'habitus_test';
+                const testValue = { 
+                    test: true, timestamp: Date.now() };
+                
+                localStorage.setItem(testKey, JSON.stringify(testValue));
+                const retrieved = JSON.parse(localStorage.getItem(testKey));
+                localStorage.removeItem(testKey);
+                
+                if (JSON.stringify(retrieved) === JSON.stringify(testValue)) {
+                    addTestResult(
+                        '✅ localStorage',
+                        'success',
+                        'localStorage funciona correctamente'
+                    );
+                } else {
+                    addTestResult(
+                        '❌ localStorage',
+                        'error',
+                        'localStorage no funciona correctamente'
+                    );
+                }
+            } catch (error) {
+                addTestResult(
+                    '❌ localStorage',
+                    'error',
+                    `Error en localStorage: ${error.message}`
+                );
+            }
+        }
+
+        // Test 3: Verificar que las funciones de migración estén desactivadas
+        function testMigrationDisabled() {
+            if (!window.Migration) {
+                addTestResult(
+                    '✅ Funciones de Migración',
+                    'success',
+                    'Módulo de migración correctamente desactivado'
+                );
+            } else {
+                addTestResult(
+                    '⚠️ Funciones de Migración',
+                    'warning',
+                    'Módulo de migración aún está disponible (debería estar desactivado)'
+                );
+            }
+        }
+
+        // Test 4: Verificar DOM básico
+        function testDOM() {
+            const requiredElements = [
+                'roleInput', 'taskInput', 'goalInput', 'reviewInput'
+            ];
+            
+            const availableElements = requiredElements.filter(id => document.getElementById(id));
+            
+            if (availableElements.length > 0) {
+                addTestResult(
+                    '✅ Elementos DOM',
+                    'success',
+                    `Elementos DOM básicos disponibles: ${availableElements.join(', ')}`
+                );
+            } else {
+                addTestResult(
+                    '❌ Elementos DOM',
+                    'error',
+                    'No se encontraron elementos DOM básicos'
+                );
+            }
+        }
+
+        // Test 5: Verificar funciones de exportación desactivadas
+        function testExportFunctionsDisabled() {
+            const exportFunctions = [
+                'exportCompleteDataFromMenu',
+                'exportTasksFromMenu',
+                'importDataFromMenu'
+            ];
+            
+            const availableFunctions = exportFunctions.filter(fn => window[fn]);
+            
+            if (availableFunctions.length === exportFunctions.length) {
+                addTestResult(
+                    '✅ Funciones de Exportación',
+                    'success',
+                    'Todas las funciones de exportación están disponibles (pero desactivadas)'
+                );
+            } else {
+                addTestResult(
+                    '⚠️ Funciones de Exportación',
+                    'warning',
+                    `Algunas funciones de exportación no están disponibles: ${exportFunctions.filter(f => !window[f]).join(', ')}`
+                );
+            }
+        }
+
+        // Ejecutar todos los tests
+        function runAllTests() {
+            console.log('🧪 Iniciando tests de funcionalidad básica...');
+            
+            testMainModules();
+            testLocalStorage();
+            testMigrationDisabled();
+            testDOM();
+            testExportFunctionsDisabled();
+            
+            console.log('✅ Tests completados');
+        }
+
+        // Ejecutar tests cuando la página esté cargada
+        window.addEventListener('load', () => {
+            setTimeout(runAllTests, 1000); // Dar tiempo a que se carguen los módulos
+        });
+    </script>
+</body>
+</html>

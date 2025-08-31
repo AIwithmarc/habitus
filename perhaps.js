@@ -29,11 +29,17 @@
     };
 
     // Initialize module
-    function init() {
+    async function init() {
         console.log('[Perhaps] Initializing Perhaps List module...');
         
-        // Load saved ideas
-        loadIdeas();
+        // Load saved ideas (now async)
+        await loadIdeas();
+        
+        // Force clean duplicates on initialization
+        const removedCount = removeDuplicates(true);
+        if (removedCount > 0) {
+            console.log('[Perhaps] Removed', removedCount, 'duplicates during initialization');
+        }
         
         // Setup DOM elements
         setupElements();
@@ -56,7 +62,7 @@
         elements.ideasCount = document.getElementById('ideasCount');
         
         if (!elements.ideaInput || !elements.addIdeaBtn || !elements.searchIdeasInput || !elements.ideasList || !elements.ideasCount) {
-            console.error('[Perhaps] Some DOM elements not found');
+            console.warn('[Perhaps] Some DOM elements not found - Ideas tab may not be available');
             return false;
         }
         
@@ -90,7 +96,7 @@
     }
 
     // Add a new idea
-    function addIdea() {
+    async function addIdea() {
         console.log('[Perhaps] addIdea called');
         
         if (!elements.ideaInput) {
@@ -107,7 +113,7 @@
         console.log('[Perhaps] Adding idea:', ideaText);
         
         // Check if idea already exists
-        if (ideas.some(idea => idea.description.toLowerCase() === ideaText.toLowerCase())) {
+        if (ideas.some(idea => (idea.description || '').toLowerCase() === ideaText.toLowerCase())) {
             console.log('[Perhaps] Idea already exists');
             if (window.App && window.App.showNotification) {
                 window.App.showNotification('Esta idea ya existe', 'warning');
@@ -136,14 +142,54 @@
             ideas = ideas.slice(0, CONFIG.MAX_IDEAS);
         }
 
+        // Clean duplicates immediately after adding
+        const seen = new Set();
+        const uniqueIdeas = [];
+        
+        for (const idea of ideas) {
+            const key = idea.id || idea.description || '';
+            const normalizedKey = key.toLowerCase().trim();
+            
+            if (!seen.has(normalizedKey) && normalizedKey !== '') {
+                seen.add(normalizedKey);
+                uniqueIdeas.push(idea);
+            } else {
+                console.log('[Perhaps] Removing duplicate after adding new idea:', idea.description);
+            }
+        }
+        
+        if (uniqueIdeas.length !== ideas.length) {
+            console.log('[Perhaps] Removed', ideas.length - uniqueIdeas.length, 'duplicates after adding new idea');
+            ideas = uniqueIdeas;
+        }
+
         console.log('[Perhaps] Ideas array updated, total:', ideas.length);
 
-        // Save and update UI
-        saveIdeas();
+        // Clear input immediately for better UX
+        elements.ideaInput.value = '';
+        
+        // Update UI immediately
         renderIdeas();
         
-        // Clear input
-        elements.ideaInput.value = '';
+        // Save to localStorage only first
+        localStorage.setItem(CONFIG.STORAGE_KEY, JSON.stringify(ideas));
+        
+        // Sync to Supabase if authenticated (without reloading)
+        if (window.HabitusSupabase?.auth?.isAuthenticated() && window.SupabaseIdeas) {
+            try {
+                await window.SupabaseIdeas.addIdea(newIdea);
+                console.log('[Perhaps] Idea synced to Supabase successfully');
+            } catch (error) {
+                console.error('[Perhaps] Failed to sync idea to Supabase:', error);
+                // Continue with local storage only
+            }
+        }
+        
+        // Force a second render to ensure UI is updated
+        setTimeout(() => {
+            renderIdeas();
+            console.log('[Perhaps] Forced UI refresh after adding idea');
+        }, 50);
         
         // Show success notification
         if (window.App && window.App.showNotification) {
@@ -164,7 +210,7 @@
             } else {
                 filteredIdeas = ideas.filter(idea => 
                     idea.archived && !idea.implemented && 
-                    idea.description.toLowerCase().includes(searchTerm)
+                    (idea.description || '').toLowerCase().includes(searchTerm)
                 );
             }
         } else if (showImplemented) {
@@ -174,7 +220,7 @@
             } else {
                 filteredIdeas = ideas.filter(idea => 
                     idea.implemented && 
-                    idea.description.toLowerCase().includes(searchTerm)
+                    (idea.description || '').toLowerCase().includes(searchTerm)
                 );
             }
         } else {
@@ -184,7 +230,7 @@
             } else {
                 filteredIdeas = ideas.filter(idea => 
                     !idea.archived && !idea.implemented && 
-                    idea.description.toLowerCase().includes(searchTerm)
+                    (idea.description || '').toLowerCase().includes(searchTerm)
                 );
             }
         }
@@ -193,6 +239,36 @@
     // Render ideas list
     function renderIdeas() {
         if (!elements.ideasList || !elements.ideasCount) return;
+
+        console.log('[Perhaps] renderIdeas called with', ideas.length, 'ideas');
+
+        // FORCE CLEAN DUPLICATES BEFORE RENDERING
+        const seen = new Set();
+        const uniqueIdeas = [];
+        
+        for (const idea of ideas) {
+            const key = idea.id || idea.description || '';
+            const normalizedKey = key.toLowerCase().trim();
+            
+            if (!seen.has(normalizedKey) && normalizedKey !== '') {
+                seen.add(normalizedKey);
+                uniqueIdeas.push(idea);
+            } else {
+                console.log('[Perhaps] Removing duplicate during render:', idea.description);
+            }
+        }
+        
+        if (uniqueIdeas.length !== ideas.length) {
+            console.log('[Perhaps] Removed', ideas.length - uniqueIdeas.length, 'duplicates during render');
+            ideas = uniqueIdeas;
+            // Save cleaned data
+            try {
+                localStorage.setItem(CONFIG.STORAGE_KEY, JSON.stringify(ideas));
+                console.log('[Perhaps] Saved cleaned data after render');
+            } catch (error) {
+                console.error('[Perhaps] Error saving cleaned data:', error);
+            }
+        }
 
         // Update count based on current view
         const activeIdeas = ideas.filter(idea => !idea.archived && !idea.implemented).length;
@@ -207,10 +283,10 @@
             elements.ideasCount.textContent = activeIdeas;
         }
 
-        // Filter ideas if needed
-        if (filteredIdeas.length === 0) {
-            filterIdeas();
-        }
+        // Always filter ideas to ensure we have the latest data
+        filterIdeas();
+        
+        console.log('[Perhaps] Filtered ideas:', filteredIdeas.length);
 
         // Render ideas
         if (filteredIdeas.length === 0) {
@@ -303,7 +379,7 @@
             <div class="bg-gray-50 border border-gray-200 rounded-lg p-4 idea-item ${idea.archived || idea.implemented ? 'opacity-75' : ''}" data-idea-id="${idea.id}">
                 <div class="flex items-center justify-between">
                     <div class="flex-1">
-                        <p class="text-gray-800 mb-2">${escapeHtml(idea.description)}</p>
+                        <p class="text-gray-800 mb-2">${escapeHtml(idea.description || 'Sin descripción')}</p>
                         <p class="text-xs text-gray-500">Creada el ${formattedDate}</p>
                         ${idea.implemented ? '<p class="text-xs text-green-600 mt-1">✅ Implementada</p>' : ''}
                         ${idea.archived ? '<p class="text-xs text-orange-600 mt-1">📁 Archivada</p>' : ''}
@@ -377,12 +453,22 @@
     }
 
     // Archive idea
-    function archiveIdea(ideaId) {
+    async function archiveIdea(ideaId) {
         const idea = ideas.find(i => i.id === ideaId);
         if (!idea) return;
 
         idea.archived = true;
-        saveIdeas();
+        await saveIdeas();
+        
+        // Try to sync with Supabase if authenticated
+        if (window.HabitusSupabase?.auth?.isAuthenticated() && window.SupabaseIdeas) {
+            try {
+                await window.SupabaseIdeas.updateIdea(ideaId, idea);
+                console.log('[Perhaps] Archived idea synced to Supabase');
+            } catch (error) {
+                console.error('[Perhaps] Failed to sync archived idea to Supabase:', error);
+            }
+        }
         
         // Force refresh of ideas list and all views
         setTimeout(() => {
@@ -398,12 +484,22 @@
     }
 
     // Unarchive idea
-    function unarchiveIdea(ideaId) {
+    async function unarchiveIdea(ideaId) {
         const idea = ideas.find(i => i.id === ideaId);
         if (!idea) return;
 
         idea.archived = false;
-        saveIdeas();
+        await saveIdeas();
+        
+        // Try to sync with Supabase if authenticated
+        if (window.HabitusSupabase?.auth?.isAuthenticated() && window.SupabaseIdeas) {
+            try {
+                await window.SupabaseIdeas.updateIdea(ideaId, idea);
+                console.log('[Perhaps] Unarchived idea synced to Supabase');
+            } catch (error) {
+                console.error('[Perhaps] Failed to sync unarchived idea to Supabase:', error);
+            }
+        }
         
         // Force refresh of ideas list and all views
         setTimeout(() => {
@@ -419,13 +515,23 @@
     }
 
     // Mark idea as implemented
-    function markAsImplemented(ideaId) {
+    async function markAsImplemented(ideaId) {
         const idea = ideas.find(i => i.id === ideaId);
         if (!idea) return;
 
         idea.implemented = true;
         idea.archived = false; // Ensure it's not archived
-        saveIdeas();
+        await saveIdeas();
+        
+        // Try to sync with Supabase if authenticated
+        if (window.HabitusSupabase?.auth?.isAuthenticated() && window.SupabaseIdeas) {
+            try {
+                await window.SupabaseIdeas.updateIdea(ideaId, idea);
+                console.log('[Perhaps] Implemented idea synced to Supabase');
+            } catch (error) {
+                console.error('[Perhaps] Failed to sync implemented idea to Supabase:', error);
+            }
+        }
         
         // Force refresh of ideas list and all views
         setTimeout(() => {
@@ -454,13 +560,13 @@
                     🎯 Convertir Idea a Meta
                 </h3>
                 <p class="text-sm text-gray-600 mb-4">
-                    <strong>Idea:</strong> ${escapeHtml(idea.description)}
+                    <strong>Idea:</strong> ${escapeHtml(idea.description || 'Sin descripción')}
                 </p>
                 <div class="mb-4">
                     <label class="block text-sm font-medium text-gray-700 mb-2">Nombre de la Meta:</label>
                     <input type="text" id="goalNameInput" class="w-full border rounded px-3 py-2" 
                            placeholder="Nombre de la meta..." 
-                           value="${escapeHtml(idea.description.length > 50 ? idea.description.substring(0, 50) + '...' : idea.description)}">
+                           value="${escapeHtml((idea.description || '').length > 50 ? (idea.description || '').substring(0, 50) + '...' : (idea.description || ''))}">
                 </div>
                 <div class="mb-6">
                     <label class="block text-sm font-medium text-gray-700 mb-2">Seleccionar Rol:</label>
@@ -568,13 +674,13 @@
                     📝 Convertir Idea a Tarea
                 </h3>
                 <p class="text-sm text-gray-600 mb-4">
-                    <strong>Idea:</strong> ${escapeHtml(idea.description)}
+                    <strong>Idea:</strong> ${escapeHtml(idea.description || 'Sin descripción')}
                 </p>
                 <div class="mb-4">
                     <label class="block text-sm font-medium text-gray-700 mb-2">Descripción de la Tarea:</label>
                     <input type="text" id="taskDescriptionInput" class="w-full border rounded px-3 py-2" 
                            placeholder="Descripción de la tarea..." 
-                           value="${escapeHtml(idea.description.length > 100 ? idea.description.substring(0, 100) + '...' : idea.description)}">
+                           value="${escapeHtml((idea.description || '').length > 100 ? (idea.description || '').substring(0, 100) + '...' : (idea.description || ''))}">
                 </div>
                 <div class="mb-4">
                     <label class="block text-sm font-medium text-gray-700 mb-2">Seleccionar Meta:</label>
@@ -755,7 +861,7 @@
     }
 
     // Delete idea permanently
-    function deleteIdea(ideaId) {
+    async function deleteIdea(ideaId) {
         if (!confirm('¿Estás seguro de que quieres eliminar esta idea permanentemente?')) {
             return;
         }
@@ -764,7 +870,17 @@
         if (ideaIndex === -1) return;
 
         const deletedIdea = ideas.splice(ideaIndex, 1)[0];
-        saveIdeas();
+        await saveIdeas();
+        
+        // Try to sync with Supabase if authenticated
+        if (window.HabitusSupabase?.auth?.isAuthenticated() && window.SupabaseIdeas) {
+            try {
+                await window.SupabaseIdeas.deleteIdea(ideaId);
+                console.log('[Perhaps] Deleted idea synced to Supabase');
+            } catch (error) {
+                console.error('[Perhaps] Failed to sync deleted idea to Supabase:', error);
+            }
+        }
         
         // Force refresh of ideas list and all views
         setTimeout(() => {
@@ -779,27 +895,386 @@
         console.log('[Perhaps] Idea deleted:', deletedIdea);
     }
 
-    // Save ideas to localStorage
-    function saveIdeas() {
+    // Save ideas to localStorage and Supabase
+    async function saveIdeas() {
         try {
+            // Save to localStorage
             localStorage.setItem(CONFIG.STORAGE_KEY, JSON.stringify(ideas));
+            
+            // Try to sync with Supabase if authenticated
+            if (window.HabitusSupabase?.auth?.isAuthenticated() && window.SupabaseIdeas) {
+                try {
+                    await window.SupabaseIdeas.syncToSupabase(ideas);
+                    console.log('[Perhaps] Ideas synced to Supabase successfully');
+                } catch (error) {
+                    console.error('[Perhaps] Failed to sync ideas to Supabase:', error);
+                    // Continue with local storage only
+                }
+            }
         } catch (error) {
             console.error('[Perhaps] Error saving ideas:', error);
         }
     }
 
-    // Load ideas from localStorage
-    function loadIdeas() {
+    // Load ideas from localStorage or Supabase
+    async function loadIdeas() {
         try {
+            // Clear ideas array first
+            ideas = [];
+            console.log('[Perhaps] Cleared ideas array before loading');
+            
+            // Try to load from Supabase if authenticated
+            if (window.HabitusSupabase?.auth?.isAuthenticated() && window.SupabaseIdeas) {
+                try {
+                    const supabaseIdeas = await window.SupabaseIdeas.getAllIdeas();
+                    console.log('[Perhaps] Retrieved', supabaseIdeas.length, 'ideas from Supabase');
+                    
+                    // Remove duplicates from Supabase data before assigning
+                    const seen = new Set();
+                    const uniqueIdeas = [];
+                    
+                    for (const idea of supabaseIdeas) {
+                        const key = idea.id || idea.description || '';
+                        const normalizedKey = key.toLowerCase().trim();
+                        
+                        if (!seen.has(normalizedKey) && normalizedKey !== '') {
+                            seen.add(normalizedKey);
+                            uniqueIdeas.push(idea);
+                        } else {
+                            console.log('[Perhaps] Skipping duplicate from Supabase:', idea.description);
+                        }
+                    }
+                    
+                    ideas = uniqueIdeas;
+                    console.log('[Perhaps] Loaded', ideas.length, 'unique ideas from Supabase');
+                    
+                    // Clear localStorage and update with clean Supabase data
+                    localStorage.removeItem(CONFIG.STORAGE_KEY);
+                    localStorage.setItem(CONFIG.STORAGE_KEY, JSON.stringify(ideas));
+                    return;
+                } catch (error) {
+                    console.error('[Perhaps] Failed to load from Supabase, falling back to localStorage:', error);
+                }
+            }
+            
+            // Fallback to localStorage ONLY if not authenticated or Supabase failed
             const saved = localStorage.getItem(CONFIG.STORAGE_KEY);
             if (saved) {
-                ideas = JSON.parse(saved);
-                console.log('[Perhaps] Loaded', ideas.length, 'ideas from storage');
+                const parsedIdeas = JSON.parse(saved);
+                console.log('[Perhaps] Loaded', parsedIdeas.length, 'ideas from localStorage');
+                
+                // Remove duplicates from localStorage data
+                const seen = new Set();
+                const uniqueIdeas = [];
+                
+                for (const idea of parsedIdeas) {
+                    const key = idea.id || idea.description || '';
+                    const normalizedKey = key.toLowerCase().trim();
+                    
+                    if (!seen.has(normalizedKey) && normalizedKey !== '') {
+                        seen.add(normalizedKey);
+                        uniqueIdeas.push(idea);
+                    } else {
+                        console.log('[Perhaps] Skipping duplicate from localStorage:', idea.description);
+                    }
+                }
+                
+                ideas = uniqueIdeas;
+                console.log('[Perhaps] Loaded', ideas.length, 'unique ideas from localStorage');
+                
+                // Save the cleaned data
+                localStorage.setItem(CONFIG.STORAGE_KEY, JSON.stringify(ideas));
+            } else {
+                ideas = [];
+                console.log('[Perhaps] No saved ideas found, starting with empty array');
             }
         } catch (error) {
             console.error('[Perhaps] Error loading ideas:', error);
             ideas = [];
         }
+    }
+
+    // Remove duplicates from ideas array
+    function removeDuplicates(saveToStorage = true) {
+        const seen = new Set();
+        const uniqueIdeas = [];
+        const duplicates = [];
+        
+        for (const idea of ideas) {
+            // Use both id and description for better duplicate detection
+            const key = idea.id || idea.description || '';
+            const normalizedKey = key.toLowerCase().trim();
+            
+            if (!seen.has(normalizedKey) && normalizedKey !== '') {
+                seen.add(normalizedKey);
+                uniqueIdeas.push(idea);
+            } else if (normalizedKey !== '') {
+                duplicates.push(idea);
+                console.log('[Perhaps] Found duplicate:', idea.description);
+            }
+        }
+        
+        const removedCount = ideas.length - uniqueIdeas.length;
+        if (removedCount > 0) {
+            console.log('[Perhaps] Removed', removedCount, 'duplicate ideas');
+            console.log('[Perhaps] Duplicates found:', duplicates.map(d => d.description));
+            ideas = uniqueIdeas;
+            
+            // Save the cleaned data only if requested
+            if (saveToStorage) {
+                try {
+                    localStorage.setItem(CONFIG.STORAGE_KEY, JSON.stringify(ideas));
+                    console.log('[Perhaps] Cleaned data saved to localStorage');
+                } catch (error) {
+                    console.error('[Perhaps] Error saving cleaned data:', error);
+                }
+            }
+        }
+        
+        return removedCount;
+    }
+
+    // Force sync with Supabase
+    async function forceSyncWithSupabase() {
+        if (!window.HabitusSupabase?.auth?.isAuthenticated() || !window.SupabaseIdeas) {
+            console.log('[Perhaps] Cannot sync - not authenticated or SupabaseIdeas not available');
+            return false;
+        }
+        
+        try {
+            console.log('[Perhaps] Force syncing with Supabase...');
+            
+            // First remove duplicates locally
+            const removedCount = removeDuplicates();
+            if (removedCount > 0) {
+                console.log('[Perhaps] Removed', removedCount, 'duplicates before syncing');
+            }
+            
+            // Then sync the clean data
+            await window.SupabaseIdeas.syncToSupabase(ideas);
+            console.log('[Perhaps] Force sync completed');
+            return true;
+        } catch (error) {
+            console.error('[Perhaps] Force sync failed:', error);
+            return false;
+        }
+    }
+
+    // Clean duplicates from both local and Supabase
+    async function cleanDuplicatesEverywhere() {
+        console.log('[Perhaps] Cleaning duplicates everywhere...');
+        
+        // Clean local duplicates
+        const localRemoved = removeDuplicates();
+        console.log('[Perhaps] Local duplicates removed:', localRemoved);
+        
+        // Clean Supabase duplicates if authenticated
+        if (window.HabitusSupabase?.auth?.isAuthenticated() && window.SupabaseIdeas) {
+            try {
+                // Get all ideas from Supabase
+                const supabaseIdeas = await window.SupabaseIdeas.getAllIdeas();
+                console.log('[Perhaps] Found', supabaseIdeas.length, 'ideas in Supabase');
+                
+                // Remove duplicates from Supabase data
+                const seen = new Set();
+                const uniqueSupabaseIdeas = [];
+                const duplicatesToDelete = [];
+                
+                for (const idea of supabaseIdeas) {
+                    const key = idea.id || idea.description || '';
+                    const normalizedKey = key.toLowerCase().trim();
+                    
+                    if (!seen.has(normalizedKey) && normalizedKey !== '') {
+                        seen.add(normalizedKey);
+                        uniqueSupabaseIdeas.push(idea);
+                    } else {
+                        duplicatesToDelete.push(idea);
+                        console.log('[Perhaps] Found duplicate in Supabase:', idea.description);
+                    }
+                }
+                
+                const supabaseRemoved = duplicatesToDelete.length;
+                if (supabaseRemoved > 0) {
+                    console.log('[Perhaps] Supabase duplicates found:', supabaseRemoved);
+                    
+                    // Delete duplicates from Supabase
+                    for (const duplicate of duplicatesToDelete) {
+                        try {
+                            await window.SupabaseIdeas.deleteIdea(duplicate.id);
+                            console.log('[Perhaps] Deleted duplicate from Supabase:', duplicate.description);
+                        } catch (error) {
+                            console.error('[Perhaps] Error deleting duplicate from Supabase:', error);
+                        }
+                    }
+                    
+                    // Update local data with clean Supabase data
+                    ideas = uniqueSupabaseIdeas;
+                    localStorage.setItem(CONFIG.STORAGE_KEY, JSON.stringify(ideas));
+                    console.log('[Perhaps] Updated local data with clean Supabase data');
+                }
+                
+                return { local: localRemoved, supabase: supabaseRemoved };
+            } catch (error) {
+                console.error('[Perhaps] Error cleaning Supabase duplicates:', error);
+                return { local: localRemoved, supabase: 0 };
+            }
+        }
+        
+        return { local: localRemoved, supabase: 0 };
+    }
+
+    // Force clean duplicates on page refresh
+    async function forceCleanOnRefresh() {
+        console.log('[Perhaps] Force cleaning duplicates on refresh...');
+        
+        // Clear localStorage completely
+        localStorage.removeItem(CONFIG.STORAGE_KEY);
+        console.log('[Perhaps] Cleared localStorage');
+        
+        // Clear the ideas array
+        ideas = [];
+        console.log('[Perhaps] Cleared ideas array');
+        
+        // Reload ideas from Supabase if authenticated
+        if (window.HabitusSupabase?.auth?.isAuthenticated() && window.SupabaseIdeas) {
+            try {
+                const supabaseIdeas = await window.SupabaseIdeas.getAllIdeas();
+                console.log('[Perhaps] Retrieved', supabaseIdeas.length, 'ideas from Supabase');
+                
+                // Remove duplicates from Supabase data before assigning
+                const seen = new Set();
+                const uniqueIdeas = [];
+                
+                for (const idea of supabaseIdeas) {
+                    const key = idea.id || idea.description || '';
+                    const normalizedKey = key.toLowerCase().trim();
+                    
+                    if (!seen.has(normalizedKey) && normalizedKey !== '') {
+                        seen.add(normalizedKey);
+                        uniqueIdeas.push(idea);
+                    } else {
+                        console.log('[Perhaps] Skipping duplicate from Supabase:', idea.description);
+                    }
+                }
+                
+                ideas = uniqueIdeas;
+                console.log('[Perhaps] Loaded', ideas.length, 'unique ideas from Supabase');
+                
+                // Save clean data to localStorage
+                localStorage.setItem(CONFIG.STORAGE_KEY, JSON.stringify(ideas));
+                console.log('[Perhaps] Saved clean data to localStorage');
+                
+                return { reloaded: ideas.length, duplicates: supabaseIdeas.length - uniqueIdeas.length };
+            } catch (error) {
+                console.error('[Perhaps] Error reloading from Supabase:', error);
+                return { reloaded: 0, duplicates: 0 };
+            }
+        }
+        
+        return { reloaded: 0, duplicates: 0 };
+    }
+
+    // Nuclear option: Complete reset and reload
+    async function nuclearReset() {
+        console.log('[Perhaps] Nuclear reset - Complete cleanup...');
+        
+        // Clear everything
+        localStorage.removeItem(CONFIG.STORAGE_KEY);
+        ideas = [];
+        console.log('[Perhaps] Cleared everything locally');
+        
+        // Force reload from Supabase
+        if (window.HabitusSupabase?.auth?.isAuthenticated() && window.SupabaseIdeas) {
+            try {
+                // Get fresh data from Supabase
+                const supabaseIdeas = await window.SupabaseIdeas.getAllIdeas();
+                console.log('[Perhaps] Retrieved', supabaseIdeas.length, 'ideas from Supabase');
+                
+                // Use only unique ideas
+                const seen = new Set();
+                const uniqueIdeas = [];
+                
+                for (const idea of supabaseIdeas) {
+                    const key = idea.id || idea.description || '';
+                    const normalizedKey = key.toLowerCase().trim();
+                    
+                    if (!seen.has(normalizedKey) && normalizedKey !== '') {
+                        seen.add(normalizedKey);
+                        uniqueIdeas.push(idea);
+                    }
+                }
+                
+                ideas = uniqueIdeas;
+                console.log('[Perhaps] Loaded', ideas.length, 'unique ideas');
+                
+                // Save to localStorage
+                localStorage.setItem(CONFIG.STORAGE_KEY, JSON.stringify(ideas));
+                console.log('[Perhaps] Saved clean data to localStorage');
+                
+                // Force UI update
+                if (typeof renderIdeas === 'function') {
+                    renderIdeas();
+                }
+                
+                return { 
+                    success: true, 
+                    total: supabaseIdeas.length, 
+                    unique: uniqueIdeas.length, 
+                    duplicates: supabaseIdeas.length - uniqueIdeas.length 
+                };
+            } catch (error) {
+                console.error('[Perhaps] Error in nuclear reset:', error);
+                return { success: false, error: error.message };
+            }
+        }
+        
+        return { success: false, error: 'Not authenticated' };
+    }
+
+    // Immediate duplicate cleanup and refresh
+    async function immediateCleanup() {
+        console.log('[Perhaps] Immediate cleanup - Force remove duplicates...');
+        
+        // Force clean duplicates in current array
+        const seen = new Set();
+        const uniqueIdeas = [];
+        
+        for (const idea of ideas) {
+            const key = idea.id || idea.description || '';
+            const normalizedKey = key.toLowerCase().trim();
+            
+            if (!seen.has(normalizedKey) && normalizedKey !== '') {
+                seen.add(normalizedKey);
+                uniqueIdeas.push(idea);
+            } else {
+                console.log('[Perhaps] Removing duplicate during immediate cleanup:', idea.description);
+            }
+        }
+        
+        const removedCount = ideas.length - uniqueIdeas.length;
+        if (removedCount > 0) {
+            console.log('[Perhaps] Removed', removedCount, 'duplicates during immediate cleanup');
+            ideas = uniqueIdeas;
+            
+            // Save cleaned data
+            try {
+                localStorage.setItem(CONFIG.STORAGE_KEY, JSON.stringify(ideas));
+                console.log('[Perhaps] Saved cleaned data after immediate cleanup');
+            } catch (error) {
+                console.error('[Perhaps] Error saving cleaned data:', error);
+            }
+            
+            // Force UI update
+            if (typeof renderIdeas === 'function') {
+                renderIdeas();
+            }
+        }
+        
+        return { 
+            success: true, 
+            removed: removedCount, 
+            remaining: uniqueIdeas.length 
+        };
     }
 
     // Get all ideas (for export)
@@ -878,7 +1353,13 @@
         toggleImplementedView,
         showRoleSelectionModal,
         showGoalSelectionModal,
-        refreshAllViews
+        refreshAllViews,
+        removeDuplicates,
+        forceSyncWithSupabase,
+        cleanDuplicatesEverywhere,
+        forceCleanOnRefresh,
+        nuclearReset,
+        immediateCleanup
     };
 
     // Debug API removed for production

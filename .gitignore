@@ -1,0 +1,65 @@
+# Habitus - Planificador Semanal
+# Archivos y carpetas que NO deben incluirse en el repositorio
+
+# Archivos de desarrollo y pruebas
+archive/
+test-*.html
+debug-*.html
+fix-*.js
+migration-*.js
+*FIXES.md
+*SUMMARY.md
+*ANALYSIS.md
+*GUIDE.md
+*INSTRUCTIONS.md
+
+# Archivos temporales
+*.tmp
+*.temp
+*.log
+*.cache
+
+# Archivos del sistema
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Archivos de IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Archivos de configuración local
+.env
+.env.local
+.env.production
+.env.development
+
+# Archivos de backup
+*.bak
+*.backup
+*_backup.*
+
+# Archivos de datos locales (si los hay)
+data/
+local-storage/
+backup/
+
+# Archivos de node_modules (si se usa npm)
+node_modules/
+package-lock.json
+yarn.lock
+
+# Archivos de build
+dist/
+build/
+out/
+
+# Archivos de logs
+logs/
+*.log
+
+# Archivos de configuración de servidor local
+server.js
+compatibility-test.js

@@ -698,8 +698,8 @@ body.dragging {
     /* Menu button positioning for PC */
     #menuButton {
         position: absolute !important;
-        top: 0 !important;
-        right: 0 !important;
+        top: 1rem !important; /* Changed from top: 0 to match userMenuButton */
+        right: 1rem !important; /* Changed from right: 0 to match userMenuButton */
         background: rgba(255, 255, 255, 0.2) !important;
         border: 1px solid rgba(255, 255, 255, 0.3) !important;
         backdrop-filter: blur(10px) !important;
@@ -709,6 +709,53 @@ body.dragging {
     #menuButton:hover {
         background: rgba(255, 255, 255, 0.3) !important;
         border-color: rgba(255, 255, 255, 0.5) !important;
+    }
+    
+    /* User Menu button positioning for PC - matching menu button */
+    #userMenuButton {
+        position: absolute !important;
+        top: 1rem !important;
+        left: 1rem !important;
+        background: rgba(255, 255, 255, 0.2) !important;
+        border: 1px solid rgba(255, 255, 255, 0.3) !important;
+        backdrop-filter: blur(10px) !important;
+        -webkit-backdrop-filter: blur(10px) !important;
+    }
+    
+    #userMenuButton:hover {
+        background: rgba(255, 255, 255, 0.3) !important;
+        border-color: rgba(255, 255, 255, 0.5) !important;
+    }
+    
+    /* Perfect centering for user avatar text */
+    #userMenuAvatar {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        line-height: 1 !important;
+        text-align: center !important;
+        width: 100% !important;
+        height: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+    
+    /* Ensure text is perfectly centered */
+    #userMenuAvatar span,
+    #userMenuAvatar {
+        text-indent: 0 !important;
+        letter-spacing: 0 !important;
+    }
+    
+    /* Force perfect centering */
+    #userMenuAvatar span {
+        display: block !important;
+        text-align: center !important;
+        width: 100% !important;
+        margin: 0 auto !important;
+        position: relative !important;
+        left: 50% !important;
+        transform: translateX(-50%) !important;
     }
 }
 
@@ -837,5 +884,169 @@ body.dragging {
 @media (max-width: 1023px) {
     .desktop-tabs {
         display: none;
+    }
+} 
+
+/* Estilos personalizados para botones de autenticación */
+.auth-button-primary {
+    background: linear-gradient(to right, #4f46e5, #7c3aed) !important;
+    color: white !important;
+    border: none !important;
+}
+
+.auth-button-primary:hover {
+    background: linear-gradient(to right, #4338ca, #6d28d9) !important;
+}
+
+.auth-button-success {
+    background: linear-gradient(to right, #16a34a, #059669) !important;
+    color: white !important;
+    border: none !important;
+}
+
+.auth-button-success:hover {
+    background: linear-gradient(to right, #15803d, #047857) !important;
+}
+
+.auth-button-danger {
+    background: linear-gradient(to right, #dc2626, #ec4899) !important;
+    color: white !important;
+    border: none !important;
+}
+
+.auth-button-danger:hover {
+    background: linear-gradient(to right, #b91c1c, #db2777) !important;
+}
+
+/* Override de Tailwind para botones específicos */
+#authRequiredOverlay button[onclick*="login"] {
+    background: linear-gradient(to right, #4f46e5, #7c3aed) !important;
+    color: white !important;
+    border: none !important;
+}
+
+#authRequiredOverlay button[onclick*="register"] {
+    background: linear-gradient(to right, #16a34a, #059669) !important;
+    color: white !important;
+    border: none !important;
+}
+
+/* Asegurar que los botones del modal tengan colores correctos */
+#authModal button[type="submit"] {
+    background: linear-gradient(to right, #4f46e5, #7c3aed) !important;
+    color: white !important;
+    border: none !important;
+}
+
+#authModal #registerForm button[type="submit"] {
+    background: linear-gradient(to right, #16a34a, #059669) !important;
+    color: white !important;
+    border: none !important;
+}
+
+#authModal #editProfileBtn {
+    background: linear-gradient(to right, #4f46e5, #7c3aed) !important;
+    color: white !important;
+    border: none !important;
+}
+
+#authModal #signOutBtn {
+    background: linear-gradient(to right, #dc2626, #ec4899) !important;
+    color: white !important;
+    border: none !important;
+}
+
+#authModal #profileEditForm button[type="submit"] {
+    background: linear-gradient(to right, #4f46e5, #7c3aed) !important;
+    color: white !important;
+    border: none !important;
+}
+
+#authModal #cancelEditProfileBtn {
+    background: #6b7280 !important;
+    color: white !important;
+    border: none !important;
+}
+
+#authModal #cancelEditProfileBtn:hover {
+    background: #4b5563 !important;
+} 
+
+:root {
+    /* Colores principales */
+    --primary-600: #4F46E5;
+    --primary-700: #4338CA;
+    --primary-800: #3730A3;
+    
+    /* Colores secundarios */
+    --secondary-600: #7C3AED;
+    --secondary-700: #6D28D9;
+    
+    /* Colores de estado */
+    --success-600: #059669;
+    --warning-600: #D97706;
+    --error-600: #DC2626;
+    
+    /* Colores neutros */
+    --gray-50: #F9FAFB;
+    --gray-100: #F3F4F6;
+    --gray-600: #4B5563;
+    --gray-700: #374151;
+    --gray-800: #1F2937;
+    --gray-900: #111827;
+}
+
+/* Botones consistentes */
+.btn-primary {
+    background-color: var(--primary-600);
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    font-weight: 500;
+    transition: all 0.2s;
+}
+
+.btn-primary:hover {
+    background-color: var(--primary-700);
+    transform: translateY(-1px);
+}
+
+.btn-secondary {
+    background-color: var(--secondary-600);
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    font-weight: 500;
+    transition: all 0.2s;
+}
+
+.btn-secondary:hover {
+    background-color: var(--secondary-700);
+    transform: translateY(-1px);
+}
+
+/* Responsive para móvil */
+@media (max-width: 768px) {
+    #authButton {
+        position: absolute;
+        top: 1rem;
+        right: 4rem;
+        z-index: 40;
+        font-size: 0.875rem;
+        padding: 0.5rem 0.75rem;
+    }
+    
+    .menu-button {
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+        z-index: 50;
+    }
+    
+    .bg-gradient-to-r.from-indigo-600.to-purple-600 {
+        padding-left: 1rem;
+        padding-right: 1rem;
     }
 } 
