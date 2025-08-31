@@ -125,6 +125,10 @@ self.addEventListener('activate', (event) => {
 
 // Fetch event - Advanced caching strategy
 self.addEventListener('fetch', (event) => {
+    // TEMPORARILY DISABLE SERVICE WORKER INTERCEPTION
+    // Let all requests go through normally
+    return;
+    
     const { request } = event;
     const url = new URL(request.url);
     
