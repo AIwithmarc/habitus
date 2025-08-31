@@ -151,11 +151,18 @@ async function handleFetch(request, url) {
         } else if (isCDNRequest) {
             return await handleCDNRequest(request, url);
         } else {
-            return await handleExternalRequest(request);
+            // For cross-origin requests, let the browser handle them
+            return await fetch(request);
         }
     } catch (error) {
         console.error('[SW] Fetch error:', error);
-        return await getFallbackResponse(request, url);
+        // Always fallback to network for cross-origin
+        try {
+            return await fetch(request);
+        } catch (fallbackError) {
+            console.error('[SW] Fallback also failed:', fallbackError);
+            return await getFallbackResponse(request, url);
+        }
     }
 }
 
@@ -207,16 +214,11 @@ async function handleAppRequest(request, url) {
     }
 }
 
-// Handle CDN requests with local fallbacks
+// Handle CDN requests with safe fallback
 async function handleCDNRequest(request, url) {
     try {
         // Try network first
-        const response = await Promise.race([
-            fetch(request),
-            new Promise((_, reject) => 
-                setTimeout(() => reject(new Error('CDN timeout')), CONFIG.FALLBACK_TIMEOUT)
-            )
-        ]);
+        const response = await fetch(request);
         
         if (response.ok) {
             // Cache successful CDN response
@@ -225,25 +227,15 @@ async function handleCDNRequest(request, url) {
             return response;
         }
     } catch (error) {
-        console.log('[SW] CDN failed, trying fallback:', url.href);
+        console.log('[SW] CDN failed, trying cached version:', url.href);
     }
     
     // Try cached version
     const cached = await caches.match(request);
     if (cached) return cached;
     
-    // Try local fallback
-    const asset = CDN_ASSETS.find(asset => url.href.startsWith(asset.url));
-    if (asset) {
-        try {
-            const fallbackResponse = await fetch(asset.fallback);
-            if (fallbackResponse.ok) return fallbackResponse;
-        } catch {
-            console.error('[SW] Local fallback failed for:', asset.fallback);
-        }
-    }
-    
-    throw new Error('All CDN options exhausted');
+    // Final fallback to network
+    return await fetch(request);
 }
 
 // Handle external requests (cache-first with timeout)
