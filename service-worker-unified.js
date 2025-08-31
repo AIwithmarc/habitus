@@ -47,17 +47,11 @@ const STATIC_ASSETS = [
     'manifest.json',
     'icons/icon-192x192.png',
     'icons/icon-512x512.png',
-    'vendor/tailwind.min.css',
     'vendor/chart.min.js'
 ].map(asset => CONFIG.BASE_PATH + asset);
 
 // CDN fallback assets (locally stored)
 const CDN_ASSETS = [
-    {
-        url: 'https://cdn.tailwindcss.com',
-        fallback: CONFIG.BASE_PATH + 'vendor/tailwind.min.css',
-        type: 'text/css'
-    },
     {
         url: 'https://cdn.jsdelivr.net/npm/chart.js@3',
         fallback: CONFIG.BASE_PATH + 'vendor/chart.min.js', 
