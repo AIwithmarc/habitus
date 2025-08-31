@@ -22,6 +22,9 @@
 <title data-i18n="title">Habitus - Planificador Semanal</title>
     <!-- Cargar Tailwind CSS desde CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdn.tailwindcss.com" />
+    <!-- Fallback local para Tailwind CSS -->
+    <link rel="stylesheet" href="vendor/tailwind.min.css" />
     <!-- Cargar Supabase Client -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@3"></script>
@@ -49,6 +52,27 @@
         if (performance.navigation.type === 1) {
             setTimeout(fixViewport, 100);
         }
+        
+        // Verify Tailwind CSS is loaded
+        function verifyTailwind() {
+            const testElement = document.createElement('div');
+            testElement.className = 'bg-blue-500';
+            document.body.appendChild(testElement);
+            
+            const computedStyle = window.getComputedStyle(testElement);
+            const backgroundColor = computedStyle.backgroundColor;
+            
+            document.body.removeChild(testElement);
+            
+            // If Tailwind is not loaded, reload the page
+            if (backgroundColor === 'rgba(0, 0, 0, 0)' || backgroundColor === 'transparent') {
+                console.log('Tailwind CSS not loaded, reloading...');
+                location.reload();
+            }
+        }
+        
+        // Check Tailwind after 2 seconds
+        setTimeout(verifyTailwind, 2000);
     </script>
 <link href="manifest.json" rel="manifest"/>
 <link href="icons/icon-192x192.png" rel="apple-touch-icon"/>
