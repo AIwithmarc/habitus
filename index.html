@@ -14,22 +14,69 @@
 <meta content="Organiza tu semana con claridad y propósito con Habitus." name="twitter:description"/>
 <meta content="https://mvallhonrat.github.io/HabitusWeeklyPlannerApp/icons/icon-514x5154.png" name="twitter:image"/>
 <meta charset="utf-8"/>
-<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport"/>
+<meta content="width=device-width, initial-scale=1.0, viewport-fit=cover" name="viewport"/>
 <meta content="#4f46e5" name="theme-color"/>
 <meta content="Planificador Semanal basado en la Matriz de Prioridades" name="description"/>
 <meta content="yes" name="apple-mobile-web-app-capable"/>
 <meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"/>
 <title data-i18n="title">Habitus - Planificador Semanal</title>
-    <!-- Cargar Tailwind CSS desde CDN -->
+    <!-- Cargar Tailwind CSS desde CDN confiable -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" />
     <!-- Cargar Supabase Client -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@3"></script>
+    
+    <!-- Fix viewport detection -->
+    <script>
+        // Force correct viewport detection
+        function fixViewport() {
+            const viewport = document.querySelector('meta[name="viewport"]');
+            if (viewport) {
+                // Force desktop viewport on desktop
+                if (window.innerWidth > 768) {
+                    viewport.setAttribute('content', 'width=1024, initial-scale=1.0');
+                } else {
+                    viewport.setAttribute('content', 'width=device-width, initial-scale=1.0, viewport-fit=cover');
+                }
+            }
+        }
+        
+        // Run on load and resize
+        window.addEventListener('load', fixViewport);
+        window.addEventListener('resize', fixViewport);
+        
+        // Force on page refresh
+        if (performance.navigation.type === 1) {
+            setTimeout(fixViewport, 100);
+        }
+        
+        // Verify Tailwind CSS is loaded
+        function verifyTailwind() {
+            const testElement = document.createElement('div');
+            testElement.className = 'bg-blue-500';
+            document.body.appendChild(testElement);
+            
+            const computedStyle = window.getComputedStyle(testElement);
+            const backgroundColor = computedStyle.backgroundColor;
+            
+            document.body.removeChild(testElement);
+            
+            // If Tailwind is not loaded, reload the page
+            if (backgroundColor === 'rgba(0, 0, 0, 0)' || backgroundColor === 'transparent') {
+                console.log('Tailwind CSS not loaded, reloading...');
+                location.reload();
+            }
+        }
+        
+        // Check Tailwind after 2 seconds
+        setTimeout(verifyTailwind, 2000);
+    </script>
 <link href="manifest.json" rel="manifest"/>
 <link href="icons/icon-192x192.png" rel="apple-touch-icon"/>
 <style>
     /* Optimizaciones para móvil */
-    @media (max-width: 640px) {
+    @media (max-width: 640px) and (orientation: portrait) {
       .text-2xl {
         font-size: 1.5rem;
       }
@@ -46,6 +93,14 @@
       /* Aumentar espaciado entre elementos */
       .space-y-1 > * + * {
         margin-top: 0.5rem;
+      }
+    }
+    
+    /* Desktop styles - force desktop layout */
+    @media (min-width: 769px) {
+      /* Ensure desktop layout */
+      body {
+        min-width: 1024px;
       }
     }
 
@@ -1323,8 +1378,6 @@ function toggleInstructions() {
     <script src="lib/supabase-tasks.js"></script>
     <script src="lib/supabase-checkins.js"></script>
     <script src="lib/supabase-ideas.js"></script>
-    <script src="debug-supabase-connection.js"></script>
-    <script src="debug-task-sync.js"></script>
     <script src="goals.js"></script>
     <script src="tasks.js"></script>
     <script src="checkin.js"></script>
@@ -1983,7 +2036,10 @@ document.addEventListener('DOMContentLoaded', () => {
     setTimeout(initApp, 100);
 });
 
-// Register service worker only when running on http/https
+// Register service worker only when running on http/https - TEMPORARILY DISABLED
+console.log('ServiceWorker registration temporarily disabled for debugging');
+
+/*
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', async () => {
         // Check if we're running on http/https
@@ -2016,6 +2072,7 @@ if ('serviceWorker' in navigator) {
         }
     });
 }
+*/
 
 // Debug script to test tab functionality - IMMEDIATE EXECUTION
 console.log('[DEBUG] Script loaded, setting up tab functionality immediately...');
