@@ -6,10 +6,10 @@
 
 // Dynamic configuration
 const CONFIG = {
-    CACHE_NAME: 'habitus-v2.8.0',
-    CACHE_STATIC: 'habitus-static-v2.8.0',
-    CACHE_DYNAMIC: 'habitus-dynamic-v2.8.0',
-    CACHE_CDN: 'habitus-cdn-v2.8.0',
+    CACHE_NAME: 'habitus-v2.7.0',
+    CACHE_STATIC: 'habitus-static-v2.7.0',
+    CACHE_DYNAMIC: 'habitus-dynamic-v2.7.0',
+    CACHE_CDN: 'habitus-cdn-v2.7.0',
     
     // Auto-detect base path
     BASE_PATH: (() => {
@@ -47,11 +47,17 @@ const STATIC_ASSETS = [
     'manifest.json',
     'icons/icon-192x192.png',
     'icons/icon-512x512.png',
+    'vendor/tailwind.min.css',
     'vendor/chart.min.js'
 ].map(asset => CONFIG.BASE_PATH + asset);
 
 // CDN fallback assets (locally stored)
 const CDN_ASSETS = [
+    {
+        url: 'https://cdn.tailwindcss.com',
+        fallback: CONFIG.BASE_PATH + 'vendor/tailwind.min.css',
+        type: 'text/css'
+    },
     {
         url: 'https://cdn.jsdelivr.net/npm/chart.js@3',
         fallback: CONFIG.BASE_PATH + 'vendor/chart.min.js', 
@@ -91,23 +97,18 @@ self.addEventListener('install', (event) => {
 
 // Activate event - Clean old caches and claim clients
 self.addEventListener('activate', (event) => {
-    console.log('[SW] Activating Service Worker v2.8.0');
+    console.log('[SW] Activating Service Worker v2.0.0');
     
     event.waitUntil(
         Promise.all([
-            // Clean ALL old caches to force fresh content
+            // Clean old caches
             caches.keys().then(cacheNames => {
-                console.log('[SW] Cleaning old caches:', cacheNames);
                 return Promise.all(
-                    cacheNames.map(cacheName => {
-                        if (cacheName.startsWith('habitus-')) {
-                            console.log('[SW] Deleting cache:', cacheName);
-                            return caches.delete(cacheName);
-                        }
-                        return Promise.resolve();
-                    })
-                );
-            }),
+                    cacheNames
+                        .filter(cacheName => 
+                            cacheName.startsWith('habitus-') && 
+                            !Object.values(CONFIG).includes(cacheName)
+                        )
                         .map(cacheName => {
                             console.log('[SW] Deleting old cache:', cacheName);
                             return caches.delete(cacheName);
@@ -125,10 +126,6 @@ self.addEventListener('activate', (event) => {
 
 // Fetch event - Advanced caching strategy
 self.addEventListener('fetch', (event) => {
-    // TEMPORARILY DISABLE SERVICE WORKER INTERCEPTION
-    // Let all requests go through normally
-    return;
-    
     const { request } = event;
     const url = new URL(request.url);
     
@@ -155,18 +152,11 @@ async function handleFetch(request, url) {
         } else if (isCDNRequest) {
             return await handleCDNRequest(request, url);
         } else {
-            // For cross-origin requests, let the browser handle them
-            return await fetch(request);
+            return await handleExternalRequest(request);
         }
     } catch (error) {
         console.error('[SW] Fetch error:', error);
-        // Always fallback to network for cross-origin
-        try {
-            return await fetch(request);
-        } catch (fallbackError) {
-            console.error('[SW] Fallback also failed:', fallbackError);
-            return await getFallbackResponse(request, url);
-        }
+        return await getFallbackResponse(request, url);
     }
 }
 
@@ -218,11 +208,16 @@ async function handleAppRequest(request, url) {
     }
 }
 
-// Handle CDN requests with safe fallback
+// Handle CDN requests with local fallbacks
 async function handleCDNRequest(request, url) {
     try {
         // Try network first
-        const response = await fetch(request);
+        const response = await Promise.race([
+            fetch(request),
+            new Promise((_, reject) => 
+                setTimeout(() => reject(new Error('CDN timeout')), CONFIG.FALLBACK_TIMEOUT)
+            )
+        ]);
         
         if (response.ok) {
             // Cache successful CDN response
@@ -231,15 +226,25 @@ async function handleCDNRequest(request, url) {
             return response;
         }
     } catch (error) {
-        console.log('[SW] CDN failed, trying cached version:', url.href);
+        console.log('[SW] CDN failed, trying fallback:', url.href);
     }
     
     // Try cached version
     const cached = await caches.match(request);
     if (cached) return cached;
     
-    // Final fallback to network
-    return await fetch(request);
+    // Try local fallback
+    const asset = CDN_ASSETS.find(asset => url.href.startsWith(asset.url));
+    if (asset) {
+        try {
+            const fallbackResponse = await fetch(asset.fallback);
+            if (fallbackResponse.ok) return fallbackResponse;
+        } catch {
+            console.error('[SW] Local fallback failed for:', asset.fallback);
+        }
+    }
+    
+    throw new Error('All CDN options exhausted');
 }
 
 // Handle external requests (cache-first with timeout)
